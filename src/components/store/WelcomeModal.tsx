@@ -127,11 +127,11 @@ export function WelcomeModal({
                   className="p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-600 dark:hover:border-indigo-400 bg-white dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/80 text-left transition-all duration-200 flex flex-col justify-between gap-3 group cursor-pointer shadow-xs hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-100 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-100 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                       <ShoppingBag className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      Rápido
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                      Temporal
                     </span>
                   </div>
                   <div>
@@ -139,10 +139,10 @@ export function WelcomeModal({
                       Entrar como Invitado
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
-                      Explora el catálogo libremente, añade al carrito y realiza compras sin necesidad de registrarte.
+                      Navega y compra sin registrarte. <strong className="text-amber-600 dark:text-amber-400">Tus compras y búsquedas se eliminarán al cerrar la página</strong>.
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700/80 flex items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400 gap-1 group-hover:translate-x-1 transition-transform">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700/80 flex items-center text-xs font-semibold text-amber-600 dark:text-amber-400 gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Continuar como invitado</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
@@ -155,11 +155,11 @@ export function WelcomeModal({
                   className="p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-600 dark:hover:border-indigo-400 bg-white dark:bg-slate-800 hover:bg-indigo-50/40 dark:hover:bg-slate-700/80 text-left transition-all duration-200 flex flex-col justify-between gap-3 group cursor-pointer shadow-xs hover:shadow-md"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-100 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                       <LogIn className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                      Personalizado
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      Permanente
                     </span>
                   </div>
                   <div>
@@ -167,10 +167,10 @@ export function WelcomeModal({
                       Iniciar Sesión
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
-                      Ingresa tus datos de cliente para autocompletar tu checkout y personalizar tu compra.
+                      Guarda tus datos. <strong className="text-emerald-600 dark:text-emerald-400">Tus compras y búsquedas se conservarán para siempre en tu cuenta</strong>.
                     </p>
                   </div>
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700/80 flex items-center text-xs font-semibold text-indigo-600 dark:text-indigo-400 gap-1 group-hover:translate-x-1 transition-transform">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700/80 flex items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400 gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Ingresar con mi cuenta</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>

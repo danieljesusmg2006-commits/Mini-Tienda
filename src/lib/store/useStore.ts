@@ -26,12 +26,19 @@ import {
   getStoredCustomer,
   loginCustomer as loginCustomerFn,
   logoutCustomer as logoutCustomerFn,
+  getStoredSearchHistory,
+  addSearchQueryToHistory,
+  clearSearchHistory,
+  getMyPurchases,
+  clearGuestSessionData,
 } from "./store";
 
 export function useStore() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [myPurchases, setMyPurchases] = useState<Order[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
@@ -40,6 +47,8 @@ export function useStore() {
     setProducts(getStoredProducts());
     setCart(getStoredCart());
     setOrders(getStoredOrders());
+    setMyPurchases(getMyPurchases());
+    setSearchHistory(getStoredSearchHistory());
     setCustomerUser(getStoredCustomer());
     setIsAuthenticated(isAdminAuthenticated());
   }, []);
@@ -52,12 +61,21 @@ export function useStore() {
       refreshState();
     };
 
+    // When guest closes or leaves the page, clean temporary guest searches and orders
+    const handleBeforeUnload = () => {
+      if (!getStoredCustomer()) {
+        clearGuestSessionData();
+      }
+    };
+
     window.addEventListener("mini_store_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       window.removeEventListener("mini_store_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [refreshState]);
 
@@ -173,10 +191,22 @@ export function useStore() {
     return cart.reduce((acc, item) => acc + item.quantity, 0);
   }, [cart]);
 
+  const addSearchQuery = useCallback((query: string) => {
+    const updated = addSearchQueryToHistory(query);
+    setSearchHistory(updated);
+  }, []);
+
+  const clearSearches = useCallback(() => {
+    clearSearchHistory();
+    setSearchHistory([]);
+  }, []);
+
   return {
     products,
     cart,
     orders,
+    myPurchases,
+    searchHistory,
     cartTotal,
     cartCount,
     customerUser,
@@ -191,6 +221,8 @@ export function useStore() {
     updatePassword,
     loginCustomer,
     logoutCustomer,
+    addSearchQuery,
+    clearSearches,
     addItemToCart,
     updateItemQuantity,
     removeItemFromCart,

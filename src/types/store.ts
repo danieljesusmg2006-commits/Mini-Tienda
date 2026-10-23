@@ -37,6 +37,8 @@ export interface Order {
   subtotal: number;
   total: number;
   status: OrderStatus;
+  isGuest?: boolean;
+  customerEmail?: string;
   createdAt: string;
   updatedAt?: string;
 }

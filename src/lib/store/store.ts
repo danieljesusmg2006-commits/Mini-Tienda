@@ -140,6 +140,10 @@ const STORAGE_KEYS = {
   ORDERS: "mini_tienda_orders_v1",
   CUSTOMER: "mini_tienda_customer_user_v1",
   HAS_CHOSEN_ACCESS: "mini_tienda_has_chosen_access_v1",
+  GUEST_SEARCHES: "mini_tienda_guest_searches_session",
+  GUEST_ORDERS: "mini_tienda_guest_orders_session",
+  ACCOUNT_SEARCHES_PREFIX: "mini_tienda_account_searches_",
+  ACCOUNT_ORDERS_PREFIX: "mini_tienda_account_orders_",
 };
 
 export const PRESET_CATEGORIES = [
@@ -593,6 +597,10 @@ export function processCheckout(input: CheckoutInput): {
     imageUrl: item.product.imageUrl,
   }));
 
+  const customer = getStoredCustomer();
+  const isGuest = !customer;
+  const customerEmail = customer ? customer.email.trim().toLowerCase() : undefined;
+
   const order: Order = {
     id: `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
     customerName: input.customerName.trim(),
@@ -604,6 +612,8 @@ export function processCheckout(input: CheckoutInput): {
     subtotal: Math.round(subtotal * 100) / 100,
     total: Math.round(total * 100) / 100,
     status: "Completada",
+    isGuest,
+    customerEmail,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -611,9 +621,140 @@ export function processCheckout(input: CheckoutInput): {
   saveProducts(updatedProducts);
   const currentOrders = getStoredOrders();
   saveOrders([order, ...currentOrders]);
+
+  // Save to customer's permanent order list OR guest's temporary session
+  saveMyPurchase(order);
+
   clearCart();
 
   return { success: true, order };
+}
+
+// -------------------------------------------------------------
+// SEARCH HISTORY (Guest: SessionStorage / Account: LocalStorage)
+// -------------------------------------------------------------
+
+export function getStoredSearchHistory(): string[] {
+  if (typeof window === "undefined") return [];
+  const customer = getStoredCustomer();
+  try {
+    if (customer && customer.email) {
+      // Permanent in localStorage
+      const key = `${STORAGE_KEYS.ACCOUNT_SEARCHES_PREFIX}${customer.email.toLowerCase().trim()}`;
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } else {
+      // Temporary in sessionStorage (wiped on closing tab/browser)
+      const raw = sessionStorage.getItem(STORAGE_KEYS.GUEST_SEARCHES);
+      return raw ? JSON.parse(raw) : [];
+    }
+  } catch {
+    return [];
+  }
+}
+
+export function addSearchQueryToHistory(query: string): string[] {
+  if (typeof window === "undefined" || !query || !query.trim()) return [];
+  const trimmed = query.trim();
+  const customer = getStoredCustomer();
+  const current = getStoredSearchHistory();
+  const updated = [trimmed, ...current.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())].slice(0, 10);
+
+  try {
+    if (customer && customer.email) {
+      const key = `${STORAGE_KEYS.ACCOUNT_SEARCHES_PREFIX}${customer.email.toLowerCase().trim()}`;
+      localStorage.setItem(key, JSON.stringify(updated));
+    } else {
+      sessionStorage.setItem(STORAGE_KEYS.GUEST_SEARCHES, JSON.stringify(updated));
+    }
+    notifyChange();
+  } catch (e) {
+    console.error("Error saving search history:", e);
+  }
+  return updated;
+}
+
+export function clearSearchHistory(): void {
+  if (typeof window === "undefined") return;
+  const customer = getStoredCustomer();
+  try {
+    if (customer && customer.email) {
+      const key = `${STORAGE_KEYS.ACCOUNT_SEARCHES_PREFIX}${customer.email.toLowerCase().trim()}`;
+      localStorage.removeItem(key);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.GUEST_SEARCHES);
+    }
+    notifyChange();
+  } catch (e) {
+    console.error("Error clearing search history:", e);
+  }
+}
+
+// -------------------------------------------------------------
+// USER PURCHASES (Guest: SessionStorage / Account: LocalStorage)
+// -------------------------------------------------------------
+
+export function getMyPurchases(): Order[] {
+  if (typeof window === "undefined") return [];
+  const customer = getStoredCustomer();
+  try {
+    if (customer && customer.email) {
+      // Permanent account purchases in localStorage
+      const key = `${STORAGE_KEYS.ACCOUNT_ORDERS_PREFIX}${customer.email.toLowerCase().trim()}`;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+      // Fallback matching customer email from all store orders
+      const allOrders = getStoredOrders();
+      const userOrders = allOrders.filter(
+        (o) =>
+          o.email?.toLowerCase().trim() === customer.email.toLowerCase().trim() ||
+          o.customerEmail?.toLowerCase().trim() === customer.email.toLowerCase().trim()
+      );
+      if (userOrders.length > 0) {
+        localStorage.setItem(key, JSON.stringify(userOrders));
+      }
+      return userOrders;
+    } else {
+      // Guest: stored in sessionStorage (cleared when closing tab / browser)
+      const raw = sessionStorage.getItem(STORAGE_KEYS.GUEST_ORDERS);
+      return raw ? JSON.parse(raw) : [];
+    }
+  } catch {
+    return [];
+  }
+}
+
+export function saveMyPurchase(order: Order): void {
+  if (typeof window === "undefined") return;
+  const customer = getStoredCustomer();
+  try {
+    if (customer && customer.email) {
+      const key = `${STORAGE_KEYS.ACCOUNT_ORDERS_PREFIX}${customer.email.toLowerCase().trim()}`;
+      const existing = getMyPurchases();
+      const updated = [order, ...existing.filter((o) => o.id !== order.id)];
+      localStorage.setItem(key, JSON.stringify(updated));
+    } else {
+      const existing = getMyPurchases();
+      const updated = [order, ...existing.filter((o) => o.id !== order.id)];
+      sessionStorage.setItem(STORAGE_KEYS.GUEST_ORDERS, JSON.stringify(updated));
+    }
+    notifyChange();
+  } catch (e) {
+    console.error("Error saving my purchase:", e);
+  }
+}
+
+export function clearGuestSessionData(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.GUEST_SEARCHES);
+    sessionStorage.removeItem(STORAGE_KEYS.GUEST_ORDERS);
+    notifyChange();
+  } catch (e) {
+    console.error("Error clearing guest session data:", e);
+  }
 }
 
 // -------------------------------------------------------------
@@ -653,9 +794,43 @@ export function loginCustomer(name: string, email: string, phone?: string, addre
     address: address ? address.trim() : undefined,
   };
   saveCustomer(customer);
+
+  // Migrate any guest session searches and orders into this customer account!
+  try {
+    const guestOrdersRaw = sessionStorage.getItem(STORAGE_KEYS.GUEST_ORDERS);
+    if (guestOrdersRaw) {
+      const guestOrders: Order[] = JSON.parse(guestOrdersRaw);
+      if (guestOrders.length > 0) {
+        const key = `${STORAGE_KEYS.ACCOUNT_ORDERS_PREFIX}${customer.email.toLowerCase().trim()}`;
+        const rawExisting = localStorage.getItem(key);
+        const existing: Order[] = rawExisting ? JSON.parse(rawExisting) : [];
+        const merged = [...guestOrders, ...existing.filter((e) => !guestOrders.some((g) => g.id === e.id))];
+        localStorage.setItem(key, JSON.stringify(merged));
+        sessionStorage.removeItem(STORAGE_KEYS.GUEST_ORDERS);
+      }
+    }
+
+    const guestSearchesRaw = sessionStorage.getItem(STORAGE_KEYS.GUEST_SEARCHES);
+    if (guestSearchesRaw) {
+      const guestSearches: string[] = JSON.parse(guestSearchesRaw);
+      if (guestSearches.length > 0) {
+        const key = `${STORAGE_KEYS.ACCOUNT_SEARCHES_PREFIX}${customer.email.toLowerCase().trim()}`;
+        const rawExisting = localStorage.getItem(key);
+        const existing: string[] = rawExisting ? JSON.parse(rawExisting) : [];
+        const merged = Array.from(new Set([...guestSearches, ...existing])).slice(0, 10);
+        localStorage.setItem(key, JSON.stringify(merged));
+        sessionStorage.removeItem(STORAGE_KEYS.GUEST_SEARCHES);
+      }
+    }
+  } catch (e) {
+    console.error("Error migrating guest data to customer account:", e);
+  }
+
+  notifyChange();
   return customer;
 }
 
 export function logoutCustomer(): void {
   saveCustomer(null);
+  notifyChange();
 }

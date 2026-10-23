@@ -5,13 +5,15 @@ import { CustomerUser } from "@/types/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { Store, ShoppingCart, ShieldCheck, User, LogOut, Sparkles } from "lucide-react";
+import { Store, ShoppingCart, ShieldCheck, User, LogOut, Sparkles, ShoppingBag, Clock } from "lucide-react";
 
 interface StoreHeaderProps {
   cartCount: number;
   cartTotal: number;
   customerUser: CustomerUser | null;
+  purchasesCount?: number;
   onOpenCart: () => void;
+  onOpenPurchases?: () => void;
   onOpenWelcome: () => void;
   onLogoutCustomer: () => void;
 }
@@ -20,7 +22,9 @@ export function StoreHeader({
   cartCount,
   cartTotal,
   customerUser,
+  purchasesCount = 0,
   onOpenCart,
+  onOpenPurchases,
   onOpenWelcome,
   onLogoutCustomer,
 }: StoreHeaderProps) {
@@ -49,7 +53,7 @@ export function StoreHeader({
         <div className="flex items-center gap-2 sm:gap-3">
           {/* User Access Status / Switcher */}
           {customerUser ? (
-            <div className="hidden md:flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs">
+            <div className="flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs">
               <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span className="font-semibold text-indigo-900 dark:text-indigo-200 truncate max-w-[120px]">
                 {customerUser.name}
@@ -67,11 +71,30 @@ export function StoreHeader({
             <button
               type="button"
               onClick={onOpenWelcome}
-              className="hidden md:inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer font-medium shadow-2xs"
-              title="Cambiar modo de acceso (Invitado / Iniciar sesión / Admin)"
+              className="inline-flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 px-2.5 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors cursor-pointer font-medium shadow-2xs"
+              title="Modo Invitado: Las compras y búsquedas se borrarán al cerrar la página. Inicia sesión para guardarlas permanentemente."
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Modo de Acceso</span>
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">Invitado (Temporal)</span>
+              <span className="sm:hidden">Invitado</span>
+            </button>
+          )}
+
+          {/* Mis Compras Button */}
+          {onOpenPurchases && (
+            <button
+              type="button"
+              onClick={onOpenPurchases}
+              className="relative inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer font-medium shadow-2xs"
+              title="Ver mis compras realizadas"
+            >
+              <ShoppingBag className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden md:inline">Mis Compras</span>
+              {purchasesCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-indigo-600 text-white">
+                  {purchasesCount}
+                </span>
+              )}
             </button>
           )}
 
