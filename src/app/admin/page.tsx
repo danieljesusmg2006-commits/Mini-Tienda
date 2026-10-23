@@ -237,18 +237,18 @@ export default function AdminDashboardPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("products")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${
               activeTab === "products"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
-            <Package className="w-4 h-4" />
-            <span>Catálogo de Productos</span>
+            <Package className="w-4 h-4 shrink-0" />
+            <span>Catálogo Productos</span>
             <Badge
               variant="secondary"
               className={`text-[10px] ml-1 px-1.5 py-0.2 ${
@@ -264,14 +264,14 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => setActiveTab("orders")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${
               activeTab === "orders"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Buscador & Gestión de Ventas</span>
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            <span>Buscador & Ventas</span>
             <Badge
               variant="secondary"
               className={`text-[10px] ml-1 px-1.5 py-0.2 ${
@@ -455,120 +455,202 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Producto</th>
-                    <th className="py-3.5 px-4">Categoría</th>
-                    <th className="py-3.5 px-4">Precio</th>
-                    <th className="py-3.5 px-4">Stock</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                  {filteredProducts.map((product) => {
-                    const isOutOfStock = product.stock === 0;
-                    const isLowStock = product.stock > 0 && product.stock <= 5;
+            <>
+              {/* Mobile Product Cards View (< 768px) */}
+              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-2 sm:p-3">
+                {filteredProducts.map((product) => {
+                  const isOutOfStock = product.stock === 0;
+                  const isLowStock = product.stock > 0 && product.stock <= 5;
 
-                    return (
-                      <tr
-                        key={product.id}
-                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
-                      >
-                        {/* Image & Name */}
-                        <td className="py-3.5 px-4 sm:px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-105 transition-transform duration-200">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={product.imageUrl}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  // Fallback image on error
-                                  (e.target as HTMLImageElement).src =
-                                    "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&auto=format&fit=crop&q=80";
-                                }}
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                {product.name}
-                              </p>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                                ID: {product.id}
+                  return (
+                    <div key={product.id} className="p-3 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&auto=format&fit=crop&q=80";
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2 leading-snug">
+                            {product.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              ID: {product.id}
+                            </span>
+                            <span className="inline-flex px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                              {product.category}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="font-black text-slate-900 dark:text-white text-sm">
+                              ${product.price.toFixed(2)}
+                            </span>
+                            {isOutOfStock ? (
+                              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900">
+                                Agotado
                               </span>
+                            ) : isLowStock ? (
+                              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900">
+                                Stock bajo: {product.stock}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">
+                                Stock: {product.stock}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action buttons on mobile */}
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditModal(product)}
+                          className="h-9 text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 justify-center"
+                        >
+                          <Pencil className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                          <span>Editar</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenDeleteModal(product)}
+                          className="h-9 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 bg-white dark:bg-slate-800 border-rose-200 dark:border-rose-900/60 justify-center"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" />
+                          <span>Eliminar</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Product Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <th className="py-3.5 px-4 sm:px-6">Producto</th>
+                      <th className="py-3.5 px-4">Categoría</th>
+                      <th className="py-3.5 px-4">Precio</th>
+                      <th className="py-3.5 px-4">Stock</th>
+                      <th className="py-3.5 px-4 sm:px-6 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                    {filteredProducts.map((product) => {
+                      const isOutOfStock = product.stock === 0;
+                      const isLowStock = product.stock > 0 && product.stock <= 5;
+
+                      return (
+                        <tr
+                          key={product.id}
+                          className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
+                        >
+                          {/* Image & Name */}
+                          <td className="py-3.5 px-4 sm:px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-105 transition-transform duration-200">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&auto=format&fit=crop&q=80";
+                                  }}
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                  {product.name}
+                                </p>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                                  ID: {product.id}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Category */}
-                        <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {product.category}
-                          </span>
-                        </td>
-
-                        {/* Price */}
-                        <td className="py-3.5 px-4">
-                          <span className="font-bold text-slate-900 dark:text-white text-sm">
-                            ${product.price.toFixed(2)}
-                          </span>
-                        </td>
-
-                        {/* Stock status */}
-                        <td className="py-3.5 px-4">
-                          {isOutOfStock ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                              Agotado (0)
+                          {/* Category */}
+                          <td className="py-3.5 px-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                              {product.category}
                             </span>
-                          ) : isLowStock ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                              Bajo stock ({product.stock} unids)
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              {product.stock} disponibles
-                            </span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenEditModal(product)}
-                              className="h-8 px-2.5 text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 shadow-2xs"
-                              title="Editar producto"
-                            >
-                              <Pencil className="w-3.5 h-3.5 mr-1 text-slate-500 dark:text-slate-400" />
-                              <span>Editar</span>
-                            </Button>
+                          {/* Price */}
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                              ${product.price.toFixed(2)}
+                            </span>
+                          </td>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOpenDeleteModal(product)}
-                              className="h-8 px-2.5 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 shadow-2xs"
-                              title="Eliminar producto"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 mr-1" />
-                              <span>Eliminar</span>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          {/* Stock status */}
+                          <td className="py-3.5 px-4">
+                            {isOutOfStock ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                Agotado (0)
+                              </span>
+                            ) : isLowStock ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Bajo stock ({product.stock} unids)
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                {product.stock} disponibles
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3.5 px-4 sm:px-6 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenEditModal(product)}
+                                className="h-8 px-2.5 text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 shadow-2xs"
+                                title="Editar producto"
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-1 text-slate-500 dark:text-slate-400" />
+                                <span>Editar</span>
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenDeleteModal(product)}
+                                className="h-8 px-2.5 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 shadow-2xs"
+                                title="Eliminar producto"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                <span>Eliminar</span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* Footer of Table */}

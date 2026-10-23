@@ -557,154 +557,249 @@ export function OrdersManager({
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th className="py-3 px-4">ID de Compra</th>
-                  <th className="py-3 px-4">Fecha</th>
-                  <th className="py-3 px-4">Cliente</th>
-                  <th className="py-3 px-4">Método de Pago</th>
-                  <th className="py-3 px-4">Productos</th>
-                  <th className="py-3 px-4">Estado</th>
-                  <th className="py-3 px-4 text-right">Total</th>
-                  <th className="py-3 px-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-300">
-                {filteredOrders.map((order) => {
-                  const badge = getStatusBadge(order.status);
-                  const StatusIcon = badge.icon;
-                  const isCurrentSearched = searchIdQuery.trim() && order.id.toLowerCase().includes(searchIdQuery.trim().toLowerCase());
+          <>
+            {/* Mobile Orders Cards (< 768px) */}
+            <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800 p-2 sm:p-3">
+              {filteredOrders.map((order) => {
+                const badge = getStatusBadge(order.status);
+                const StatusIcon = badge.icon;
+                const isCurrentSearched = searchIdQuery.trim() && order.id.toLowerCase().includes(searchIdQuery.trim().toLowerCase());
 
-                  return (
-                    <tr
-                      key={order.id}
-                      className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors ${
-                        isCurrentSearched ? "bg-indigo-50/40 dark:bg-indigo-950/20" : ""
-                      }`}
-                    >
-                      {/* Order ID */}
-                      <td className="py-3.5 px-4 font-mono font-medium">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => onOpenDetail(order)}
-                            className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer"
-                            title="Haga clic para ver toda la información"
-                          >
-                            {order.id}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopy(order.id, e)}
-                            className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
-                            title="Copiar ID"
-                          >
-                            {copiedId === order.id ? (
-                              <Check className="w-3 h-3 text-emerald-600" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* Date */}
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-[11px]">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          <span>{formatDate(order.createdAt)}</span>
-                        </div>
-                      </td>
-
-                      {/* Customer */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-900 dark:text-white">
-                          {order.customerName}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
-                          {order.email}
-                        </div>
-                      </td>
-
-                      {/* Payment */}
-                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 dark:text-slate-300 text-[11px]">
-                        <div className="flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="truncate max-w-[140px]">{order.paymentMethod}</span>
-                        </div>
-                      </td>
-
-                      {/* Items */}
-                      <td className="py-3.5 px-4">
-                        <Badge
-                          variant="secondary"
-                          className="text-[11px] font-normal bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                return (
+                  <div
+                    key={order.id}
+                    className={`p-3 space-y-2.5 rounded-xl transition-colors ${
+                      isCurrentSearched ? "bg-indigo-50/50 dark:bg-indigo-950/30" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onOpenDetail(order)}
+                          className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                         >
-                          <Package className="w-3 h-3 mr-1 text-slate-500" />
-                          {order.items?.reduce((acc, it) => acc + it.quantity, 0) || 0} ítems
-                        </Badge>
-                      </td>
+                          {order.id}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopy(order.id, e)}
+                          className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        >
+                          {copiedId === order.id ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
 
-                      {/* Status */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <Badge variant="outline" className={`text-[11px] gap-1 py-0.5 px-2 font-medium ${badge.className}`}>
-                          <StatusIcon className="w-3 h-3" />
-                          {order.status}
-                        </Badge>
-                      </td>
+                      <Badge variant="outline" className={`text-[10px] gap-1 py-0 px-2 font-medium ${badge.className}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        {order.status}
+                      </Badge>
+                    </div>
 
-                      {/* Total */}
-                      <td className="py-3.5 px-4 text-right font-bold text-slate-900 dark:text-white">
-                        ${order.total.toFixed(2)}
-                      </td>
+                    <div className="flex items-baseline justify-between gap-2 text-xs">
+                      <div>
+                        <p className="font-semibold text-slate-900 dark:text-white">{order.customerName}</p>
+                        <p className="text-[10px] text-slate-400">{formatDate(order.createdAt)}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-slate-900 dark:text-white">
+                          ${order.total.toFixed(2)}
+                        </span>
+                        <p className="text-[10px] text-slate-400">
+                          {order.items?.reduce((acc, it) => acc + it.quantity, 0) || 0} productos
+                        </p>
+                      </div>
+                    </div>
 
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* View Detail Button */}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onOpenDetail(order)}
-                            className="h-8 px-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-xs gap-1"
-                            title="Ver toda la información dada"
+                    {/* Action buttons on mobile */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onOpenDetail(order)}
+                        className="h-8 px-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border-slate-200 dark:border-slate-700 justify-center"
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        <span>Detalle</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onOpenEditOrder(order)}
+                        className="h-8 px-1 text-[11px] text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border-slate-200 dark:border-slate-700 justify-center"
+                      >
+                        <Pencil className="w-3 h-3 mr-1" />
+                        <span>Editar</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onDeleteOrder(order)}
+                        className="h-8 px-1 text-[11px] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 justify-center"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        <span>Borrar</span>
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Orders Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">ID de Compra</th>
+                    <th className="py-3 px-4">Fecha</th>
+                    <th className="py-3 px-4">Cliente</th>
+                    <th className="py-3 px-4">Método de Pago</th>
+                    <th className="py-3 px-4">Productos</th>
+                    <th className="py-3 px-4">Estado</th>
+                    <th className="py-3 px-4 text-right">Total</th>
+                    <th className="py-3 px-4 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                  {filteredOrders.map((order) => {
+                    const badge = getStatusBadge(order.status);
+                    const StatusIcon = badge.icon;
+                    const isCurrentSearched = searchIdQuery.trim() && order.id.toLowerCase().includes(searchIdQuery.trim().toLowerCase());
+
+                    return (
+                      <tr
+                        key={order.id}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors ${
+                          isCurrentSearched ? "bg-indigo-50/40 dark:bg-indigo-950/20" : ""
+                        }`}
+                      >
+                        {/* Order ID */}
+                        <td className="py-3.5 px-4 font-mono font-medium">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => onOpenDetail(order)}
+                              className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline cursor-pointer"
+                              title="Haga clic para ver toda la información"
+                            >
+                              {order.id}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopy(order.id, e)}
+                              className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                              title="Copiar ID"
+                            >
+                              {copiedId === order.id ? (
+                                <Check className="w-3 h-3 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+
+                        {/* Date */}
+                        <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-[11px]">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            <span>{formatDate(order.createdAt)}</span>
+                          </div>
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slate-900 dark:text-white">
+                            {order.customerName}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
+                            {order.email}
+                          </div>
+                        </td>
+
+                        {/* Payment */}
+                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 dark:text-slate-300 text-[11px]">
+                          <div className="flex items-center gap-1.5">
+                            <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="truncate max-w-[140px]">{order.paymentMethod}</span>
+                          </div>
+                        </td>
+
+                        {/* Items */}
+                        <td className="py-3.5 px-4">
+                          <Badge
+                            variant="secondary"
+                            className="text-[11px] font-normal bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                           >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Ver Detalle</span>
-                          </Button>
+                            <Package className="w-3 h-3 mr-1 text-slate-500" />
+                            {order.items?.reduce((acc, it) => acc + it.quantity, 0) || 0} ítems
+                          </Badge>
+                        </td>
 
-                          {/* Edit Button */}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onOpenEditOrder(order)}
-                            className="h-8 px-2 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs gap-1"
-                            title="Modificar venta"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Modificar</span>
-                          </Button>
+                        {/* Status */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <Badge variant="outline" className={`text-[11px] gap-1 py-0.5 px-2 font-medium ${badge.className}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {order.status}
+                          </Badge>
+                        </td>
 
-                          {/* Delete Button */}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onDeleteOrder(order)}
-                            className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                            title="Eliminar venta"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {/* Total */}
+                        <td className="py-3.5 px-4 text-right font-bold text-slate-900 dark:text-white">
+                          ${order.total.toFixed(2)}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* View Detail Button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onOpenDetail(order)}
+                              className="h-8 px-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-xs gap-1"
+                              title="Ver toda la información dada"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Ver Detalle</span>
+                            </Button>
+
+                            {/* Edit Button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onOpenEditOrder(order)}
+                              className="h-8 px-2 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs gap-1"
+                              title="Modificar venta"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Modificar</span>
+                            </Button>
+
+                            {/* Delete Button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onDeleteOrder(order)}
+                              className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                              title="Eliminar venta"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* Footer */}
