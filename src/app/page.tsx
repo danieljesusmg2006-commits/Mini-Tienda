@@ -108,7 +108,7 @@ export default function PublicStorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 transition-colors">
       {/* Header */}
       <StoreHeader
         cartCount={cartCount}
@@ -151,42 +151,42 @@ export default function PublicStorePage() {
       )}
 
       {/* Hero Banner */}
-      <section className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white py-12 px-4 sm:px-6 lg:px-8 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-xs font-semibold text-indigo-200">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+      <section className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white py-6 sm:py-10 px-3 sm:px-6 lg:px-8 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-[11px] sm:text-xs font-semibold text-indigo-200">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-300" />
               <span>
                 {customerUser
                   ? `Conectado como: ${customerUser.name}`
                   : "Modo Invitado Activo"}
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
               Encuentra lo que necesitas con entrega inmediata
             </h1>
-            <p className="text-sm text-indigo-200 leading-relaxed">
+            <p className="text-xs sm:text-sm text-indigo-200 leading-relaxed line-clamp-2 sm:line-clamp-none">
               Explora nuestro catálogo precargado, agrega productos al carrito con cálculo en tiempo real y realiza tu compra con checkout integrado en la misma página.
             </p>
           </div>
 
           {/* Highlights & Admin Shortcut */}
-          <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">
-            <div className="p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-xs text-indigo-100 flex items-center gap-3">
-              <Truck className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div className="grid grid-cols-2 sm:flex sm:flex-row md:flex-col gap-2.5 sm:gap-3 shrink-0">
+            <div className="p-2.5 sm:p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-xs text-indigo-100 flex items-center gap-2.5 sm:gap-3">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
               <div>
-                <p className="font-bold text-white">Envío Gratuito</p>
-                <p className="text-[11px] text-indigo-200">En todas tus compras</p>
+                <p className="font-bold text-white text-[11px] sm:text-xs">Envío Gratuito</p>
+                <p className="text-[10px] sm:text-[11px] text-indigo-200">En todas tus compras</p>
               </div>
             </div>
 
             <Link href="/admin">
-              <div className="p-3.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-950/90 transition-colors border border-indigo-500/40 text-xs text-indigo-200 flex items-center justify-between gap-3 group cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                  <span>¿Eres administrador? Gestionar CRUD</span>
+              <div className="p-2.5 sm:p-3.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-950/90 transition-colors border border-indigo-500/40 text-xs text-indigo-200 flex items-center justify-between gap-2 sm:gap-3 group cursor-pointer h-full">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <span className="text-[11px] sm:text-xs font-medium">Panel Admin</span>
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </div>
             </Link>
           </div>
@@ -194,10 +194,10 @@ export default function PublicStorePage() {
       </section>
 
       {/* Main Store Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-6">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full space-y-4 sm:space-y-6">
         {/* Search, Category Filters & Sort Controls */}
-        <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 p-3 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3 sm:space-y-4 transition-colors">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3">
             {/* Search Bar */}
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -215,8 +215,8 @@ export default function PublicStorePage() {
                     addSearchQuery(searchTerm.trim());
                   }
                 }}
-                placeholder="Buscar por nombre de producto o categoría... (Presione Enter para buscar)"
-                className="pl-10 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus-visible:ring-indigo-500 h-10"
+                placeholder="Buscar por nombre o categoría..."
+                className="pl-10 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus-visible:ring-indigo-500 h-9 sm:h-10"
               />
               {searchTerm && (
                 <button
@@ -231,11 +231,11 @@ export default function PublicStorePage() {
 
             {/* Sort Selector */}
             <div className="flex items-center gap-2 shrink-0">
-              <SlidersHorizontal className="w-4 h-4 text-slate-400 shrink-0" />
+              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
-                className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="h-9 sm:h-10 w-full sm:w-auto px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <option value="featured">Destacados</option>
                 <option value="price-asc">Precio: Menor a Mayor</option>
@@ -247,17 +247,18 @@ export default function PublicStorePage() {
 
           {/* Recent Searches Chips */}
           {searchHistory.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
-              <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 font-medium mr-1">
+            <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
+              <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 font-medium mr-1 shrink-0">
                 <History className="w-3.5 h-3.5" />
-                <span>Búsquedas recientes:</span>
+                <span className="hidden sm:inline">Búsquedas recientes:</span>
+                <span className="sm:hidden">Recientes:</span>
               </div>
               {searchHistory.map((query, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setSearchTerm(query)}
-                  className={`px-2.5 py-0.5 rounded-full border text-[11px] transition-colors cursor-pointer ${
+                  className={`px-2 py-0.5 rounded-full border text-[10px] sm:text-[11px] transition-colors cursor-pointer ${
                     searchTerm.toLowerCase() === query.toLowerCase()
                       ? "bg-indigo-600 text-white border-indigo-600 font-bold"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -268,10 +269,10 @@ export default function PublicStorePage() {
                 </button>
               ))}
 
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1 hidden min-[480px]:inline">
                 {customerUser
-                  ? "• Guardadas en tu cuenta"
-                  : "• Temporales (se borrarán al cerrar la página)"}
+                  ? "• Guardadas"
+                  : "• Temporales"}
               </span>
 
               <button
@@ -286,14 +287,14 @@ export default function PublicStorePage() {
           )}
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 text-xs -mx-1 px-1">
             <span className="text-slate-400 dark:text-slate-500 font-medium mr-1 text-[11px] shrink-0">
               Categorías:
             </span>
             <button
               type="button"
               onClick={() => setSelectedCategory("TODAS")}
-              className={`px-3 py-1.5 rounded-full border transition-all cursor-pointer shrink-0 font-medium ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border transition-all cursor-pointer shrink-0 text-[11px] sm:text-xs font-medium ${
                 selectedCategory === "TODAS"
                   ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -310,7 +311,7 @@ export default function PublicStorePage() {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full border transition-all cursor-pointer shrink-0 font-medium ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border transition-all cursor-pointer shrink-0 text-[11px] sm:text-xs font-medium ${
                     isSelected
                       ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -327,7 +328,7 @@ export default function PublicStorePage() {
         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
           <span>
             Mostrando <strong>{filteredProducts.length}</strong> de{" "}
-            <strong>{products.length}</strong> productos disponibles
+            <strong>{products.length}</strong> productos
           </span>
 
           {(searchTerm || selectedCategory !== "TODAS") && (
@@ -339,16 +340,16 @@ export default function PublicStorePage() {
               }}
               className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline font-medium cursor-pointer"
             >
-              Limpiar filtros de búsqueda
+              Limpiar filtros
             </button>
           )}
         </div>
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center flex flex-col items-center justify-center space-y-3 transition-colors">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-              <PackageX className="w-8 h-8" />
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-3 transition-colors">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <PackageX className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
             <h3 className="text-base font-bold text-slate-800 dark:text-white">No encontramos productos</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
@@ -367,7 +368,7 @@ export default function PublicStorePage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4 md:gap-5">
             {filteredProducts.map((product) => {
               const inCartItem = cart.find((item) => item.product.id === product.id);
               const quantityInCart = inCartItem ? inCartItem.quantity : 0;

@@ -55,52 +55,53 @@ export function ProductCard({
         />
 
         {/* Category Pill */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/95 dark:bg-slate-800/95 backdrop-blur-md text-slate-800 dark:text-slate-200 shadow-sm border border-slate-200/60 dark:border-slate-700">
+        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200/60 dark:border-slate-700 max-w-[95px] sm:max-w-none truncate">
           {product.category}
         </span>
 
         {/* In-cart indicator badge */}
         {quantityInCart > 0 && (
-          <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-sm flex items-center gap-1">
+          <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-xs flex items-center gap-1">
             <Check className="w-3 h-3" />
-            {quantityInCart} en carrito
+            <span>{quantityInCart}</span>
+            <span className="hidden sm:inline">en carrito</span>
           </span>
         )}
       </div>
 
       {/* Card Content */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-3">
-        <div className="space-y-1.5">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between gap-2.5 sm:gap-3">
+        <div className="space-y-1 sm:space-y-1.5">
+          <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug min-h-[2.2rem] sm:min-h-[2.5rem]">
             {product.name}
           </h3>
 
           {/* Stock Badges */}
           <div>
             {isOutOfStock ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 sm:px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                 Agotado
               </span>
             ) : isLowStock ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900">
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 sm:px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                ¡Últimas {product.stock} unidades!
+                <span>¡Últimas {product.stock}!</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900">
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 sm:px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {product.stock} disponibles
+                <span>{product.stock} disp.</span>
               </span>
             )}
           </div>
         </div>
 
         {/* Price & Action */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+        <div className="pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between gap-2">
           <div>
-            <span className="text-xs text-slate-400 dark:text-slate-500 block font-medium">Precio</span>
-            <span className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 block font-medium">Precio</span>
+            <span className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
               ${product.price.toFixed(2)}
             </span>
           </div>
@@ -109,20 +110,20 @@ export function ProductCard({
             size="sm"
             onClick={handleAdd}
             disabled={isOutOfStock || isMaxInCart || isAdding}
-            className={`text-xs gap-1.5 font-medium transition-all cursor-pointer ${
+            className={`w-full min-[380px]:w-auto h-8 sm:h-9 text-[11px] sm:text-xs px-2.5 sm:px-3 gap-1.5 font-medium transition-all cursor-pointer ${
               isOutOfStock
                 ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
                 : isMaxInCart
                 ? "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-sm"
+                : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-xs"
             }`}
           >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span>
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
               {isOutOfStock
                 ? "Agotado"
                 : isMaxInCart
-                ? "Máximo alcanzado"
+                ? "Límite"
                 : "Agregar"}
             </span>
           </Button>

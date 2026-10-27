@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
         onLogout={logout}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 space-y-4 sm:space-y-6">
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto no-scrollbar">
           <button
@@ -286,9 +286,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {activeTab === "products" && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Title & Actions Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">

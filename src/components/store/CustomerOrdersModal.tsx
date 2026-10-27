@@ -64,36 +64,36 @@ export function CustomerOrdersModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] transition-colors"
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] transition-colors"
         role="dialog"
         aria-modal="true"
         aria-labelledby="customer-orders-title"
       >
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <ShoppingBag className="w-5 h-5" />
+        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 id="customer-orders-title" className="text-lg font-bold text-slate-900 dark:text-white">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h3 id="customer-orders-title" className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">
                   Mis Compras Realizadas
                 </h3>
                 <Badge
                   variant="outline"
-                  className={`text-[10px] font-semibold py-0 px-2 ${
+                  className={`text-[9px] sm:text-[10px] font-semibold py-0 px-1.5 sm:px-2 ${
                     isGuest
                       ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
                       : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
                   }`}
                 >
-                  {isGuest ? "Modo Invitado" : "Cuenta Guardada"}
+                  {isGuest ? "Invitado" : "Guardada"}
                 </Badge>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 {isGuest
                   ? "Compras de la sesión actual de navegación"
                   : `Historial guardado permanentemente para ${customerUser?.name}`}
@@ -103,7 +103,7 @@ export function CustomerOrdersModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Cerrar modal"
           >
             <X className="w-5 h-5" />
@@ -111,10 +111,10 @@ export function CustomerOrdersModal({
         </div>
 
         {/* Persistence Notice Banner */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
           {isGuest ? (
-            <div className="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-start gap-2.5">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 text-xs">
+              <div className="flex items-start gap-2 sm:gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold">⚠️ Modo Invitado Temporal</p>
@@ -129,7 +129,7 @@ export function CustomerOrdersModal({
                   onClose();
                   onOpenLogin();
                 }}
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shrink-0 shadow-xs"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shrink-0 shadow-xs w-full sm:w-auto"
               >
                 <span>Guardar con Cuenta</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-1" />
@@ -151,7 +151,7 @@ export function CustomerOrdersModal({
         </div>
 
         {/* Orders Content List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
           {orders.length === 0 ? (
             <div className="py-12 text-center space-y-3">
               <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
@@ -170,7 +170,7 @@ export function CustomerOrdersModal({
             orders.map((order) => (
               <div
                 key={order.id}
-                className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-indigo-300 dark:hover:border-indigo-900 transition-all space-y-3"
+                className="p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-indigo-300 dark:hover:border-indigo-900 transition-all space-y-3"
               >
                 {/* Order Top Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">

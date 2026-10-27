@@ -83,39 +83,39 @@ export function WelcomeModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-all max-h-[92vh]"
+        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-all max-h-[94vh]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="welcome-modal-title"
       >
         {/* Top Hero Header */}
-        <div className="relative p-6 pb-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-b from-indigo-50/60 to-transparent dark:from-indigo-950/40 text-center space-y-2">
+        <div className="relative p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-b from-indigo-50/60 to-transparent dark:from-indigo-950/40 text-center space-y-1.5 sm:space-y-2 shrink-0">
           {/* Theme Toggle Button */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
             <ThemeToggle />
           </div>
 
-          <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-500/25">
-            <Store className="w-7 h-7" />
+          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white mx-auto shadow-md shadow-indigo-500/25">
+            <Store className="w-5 h-5 sm:w-7 sm:h-7" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-semibold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[10px] sm:text-[11px] font-semibold mb-0.5 sm:mb-1">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>Mini Tienda Digital</span>
             </div>
-            <h2 id="welcome-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h2 id="welcome-modal-title" className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               ¡Te damos la bienvenida!
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Selecciona cómo deseas ingresar para disfrutar de la experiencia:
             </p>
           </div>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4">
           {view === "choose" ? (
             <>
               {/* Primary User Options (Guest or Login) */}

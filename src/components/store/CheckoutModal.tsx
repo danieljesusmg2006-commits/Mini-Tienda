@@ -147,24 +147,24 @@ export function CheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] transition-colors"
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[94vh] transition-colors"
         role="dialog"
         aria-modal="true"
         aria-labelledby="checkout-modal-title"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm">
-              <ShoppingBag className="w-5 h-5" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 id="checkout-modal-title" className="text-sm font-bold text-slate-900 dark:text-white">
+              <h2 id="checkout-modal-title" className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                 {completedOrder ? "Comprobante de Compra" : "Finalizar Pedido (Checkout)"}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 {completedOrder
                   ? "Transacción procesada correctamente"
                   : "Complete sus datos de entrega y pago"}
@@ -185,7 +185,7 @@ export function CheckoutModal({
         {/* Modal Content */}
         {completedOrder ? (
           /* Receipt Screen */
-          <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
             {/* Success Hero */}
             <div className="text-center py-4 space-y-2 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 p-4">
               <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
@@ -292,7 +292,7 @@ export function CheckoutModal({
           </div>
         ) : (
           /* Checkout Form */
-          <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
             {errorMessage && (
               <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
