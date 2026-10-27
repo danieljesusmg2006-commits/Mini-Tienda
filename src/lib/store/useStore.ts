@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Product, ProductInput, CartItem, Order, CustomerUser, OrderInput } from "@/types/store";
+import { Product, ProductInput, CartItem, Order, CustomerUser, OrderInput, ChatMessage, OrderChat, ChatSenderRole } from "@/types/store";
 import {
   getStoredProducts,
   createProduct as createProductFn,
@@ -31,6 +31,12 @@ import {
   clearSearchHistory,
   getMyPurchases,
   clearGuestSessionData,
+  getStoredChats,
+  getOrderChat,
+  getOrCreateOrderChat,
+  sendChatMessage as sendChatMessageFn,
+  markChatAsRead as markChatAsReadFn,
+  deleteOrderChat as deleteOrderChatFn,
 } from "./store";
 
 export function useStore() {
@@ -38,6 +44,7 @@ export function useStore() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [myPurchases, setMyPurchases] = useState<Order[]>([]);
+  const [chats, setChats] = useState<Record<string, OrderChat>>({});
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -48,6 +55,7 @@ export function useStore() {
     setCart(getStoredCart());
     setOrders(getStoredOrders());
     setMyPurchases(getMyPurchases());
+    setChats(getStoredChats());
     setSearchHistory(getStoredSearchHistory());
     setCustomerUser(getStoredCustomer());
     setIsAuthenticated(isAdminAuthenticated());
@@ -191,6 +199,48 @@ export function useStore() {
     return cart.reduce((acc, item) => acc + item.quantity, 0);
   }, [cart]);
 
+  // Chat Operations
+  const sendChatMessage = useCallback((
+    orderId: string,
+    sender: ChatSenderRole,
+    senderName: string,
+    text: string,
+    customerMeta?: { name?: string; email?: string; phone?: string }
+  ) => {
+    const msg = sendChatMessageFn(orderId, sender, senderName, text, customerMeta);
+    refreshState();
+    return msg;
+  }, [refreshState]);
+
+  const markChatAsRead = useCallback((orderId: string, reader: "customer" | "seller") => {
+    markChatAsReadFn(orderId, reader);
+    refreshState();
+  }, [refreshState]);
+
+  const getOrCreateChat = useCallback((
+    orderId: string,
+    customerName?: string,
+    customerEmail?: string,
+    customerPhone?: string
+  ) => {
+    const chat = getOrCreateOrderChat(orderId, customerName, customerEmail, customerPhone);
+    refreshState();
+    return chat;
+  }, [refreshState]);
+
+  const deleteChat = useCallback((orderId: string) => {
+    deleteOrderChatFn(orderId);
+    refreshState();
+  }, [refreshState]);
+
+  const totalUnreadAdminMessages = useMemo(() => {
+    return Object.values(chats).reduce((acc, c) => acc + (c.unreadForAdmin || 0), 0);
+  }, [chats]);
+
+  const totalUnreadCustomerMessages = useMemo(() => {
+    return Object.values(chats).reduce((acc, c) => acc + (c.unreadForCustomer || 0), 0);
+  }, [chats]);
+
   const addSearchQuery = useCallback((query: string) => {
     const updated = addSearchQueryToHistory(query);
     setSearchHistory(updated);
@@ -206,6 +256,9 @@ export function useStore() {
     cart,
     orders,
     myPurchases,
+    chats,
+    totalUnreadAdminMessages,
+    totalUnreadCustomerMessages,
     searchHistory,
     cartTotal,
     cartCount,
@@ -231,6 +284,10 @@ export function useStore() {
     createOrder,
     editOrder,
     removeOrder,
+    sendChatMessage,
+    markChatAsRead,
+    getOrCreateChat,
+    deleteChat,
     refreshState,
   };
 }

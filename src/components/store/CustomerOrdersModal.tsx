@@ -16,6 +16,7 @@ import {
   Check,
   ArrowRight,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ interface CustomerOrdersModalProps {
   orders: Order[];
   customerUser: CustomerUser | null;
   onOpenLogin: () => void;
+  onOpenChat?: (order: Order) => void;
 }
 
 export function CustomerOrdersModal({
@@ -34,6 +36,7 @@ export function CustomerOrdersModal({
   orders,
   customerUser,
   onOpenLogin,
+  onOpenChat,
 }: CustomerOrdersModalProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -249,6 +252,26 @@ export function CustomerOrdersModal({
                     </span>
                   </div>
                 </div>
+
+                {/* Contact Seller CTA */}
+                {onOpenChat && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">¿Dudas sobre esta entrega?</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onClose();
+                        onOpenChat(order);
+                      }}
+                      className="text-xs gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer h-8 shadow-2xs"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Comunicarse con el vendedor</span>
+                    </Button>
+                  </div>
+                )}
               </div>
             ))
           )}

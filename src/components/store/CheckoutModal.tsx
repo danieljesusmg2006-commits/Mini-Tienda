@@ -15,6 +15,7 @@ import {
   User,
   ShoppingBag,
   Printer,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ interface CheckoutModalProps {
     order?: Order;
     error?: string;
   };
+  onOpenChat?: (order: Order) => void;
 }
 
 const PAYMENT_METHODS = [
@@ -59,6 +61,7 @@ export function CheckoutModal({
   customerUser,
   onClose,
   onConfirmCheckout,
+  onOpenChat,
 }: CheckoutModalProps) {
   // Form state
   const [customerName, setCustomerName] = useState("");
@@ -268,6 +271,34 @@ export function CheckoutModal({
                 </div>
               </div>
             </div>
+
+            {/* Contact Seller CTA Banner */}
+            {onOpenChat && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50 to-emerald-50/50 dark:from-indigo-950/40 dark:to-emerald-950/30 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white">¿Tienes dudas o requerimientos sobre tu pedido?</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Chatea en vivo directamente con el vendedor sin salir de la página.</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    const orderToChat = completedOrder;
+                    onClose();
+                    onOpenChat(orderToChat);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold gap-1.5 shadow-sm shrink-0 cursor-pointer w-full sm:w-auto"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Comunicarse con el vendedor</span>
+                </Button>
+              </div>
+            )}
 
             {/* Modal Actions */}
             <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">

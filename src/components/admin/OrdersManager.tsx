@@ -27,6 +27,7 @@ import {
   Sparkles,
   ArrowRight,
   Filter,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ interface OrdersManagerProps {
   onOpenEditOrder: (order: Order) => void;
   onOpenDetail: (order: Order) => void;
   onDeleteOrder: (order: Order) => void;
+  onOpenChat?: (order: Order) => void;
 }
 
 export function OrdersManager({
@@ -44,6 +46,7 @@ export function OrdersManager({
   onOpenEditOrder,
   onOpenDetail,
   onDeleteOrder,
+  onOpenChat,
 }: OrdersManagerProps) {
   const [searchIdQuery, setSearchIdQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("TODOS");
@@ -616,23 +619,34 @@ export function OrdersManager({
                     </div>
 
                     {/* Action buttons on mobile */}
-                    <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-4 gap-1 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => onOpenDetail(order)}
                         className="h-8 px-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 border-slate-200 dark:border-slate-700 justify-center"
                       >
-                        <Eye className="w-3 h-3 mr-1" />
+                        <Eye className="w-3 h-3 mr-0.5" />
                         <span>Detalle</span>
                       </Button>
+                      {onOpenChat && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onOpenChat(order)}
+                          className="h-8 px-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border-slate-200 dark:border-slate-700 justify-center"
+                        >
+                          <MessageSquare className="w-3 h-3 mr-0.5" />
+                          <span>Chat</span>
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => onOpenEditOrder(order)}
                         className="h-8 px-1 text-[11px] text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border-slate-200 dark:border-slate-700 justify-center"
                       >
-                        <Pencil className="w-3 h-3 mr-1" />
+                        <Pencil className="w-3 h-3 mr-0.5" />
                         <span>Editar</span>
                       </Button>
                       <Button
@@ -641,7 +655,7 @@ export function OrdersManager({
                         onClick={() => onDeleteOrder(order)}
                         className="h-8 px-1 text-[11px] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 justify-center"
                       >
-                        <Trash2 className="w-3 h-3 mr-1" />
+                        <Trash2 className="w-3 h-3 mr-0.5" />
                         <span>Borrar</span>
                       </Button>
                     </div>
@@ -768,6 +782,20 @@ export function OrdersManager({
                               <Eye className="w-3.5 h-3.5" />
                               <span className="hidden sm:inline">Ver Detalle</span>
                             </Button>
+
+                            {/* Chat Support Button */}
+                            {onOpenChat && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onOpenChat(order)}
+                                className="h-8 px-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs gap-1"
+                                title="Abrir chat con el comprador"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Chat</span>
+                              </Button>
+                            )}
 
                             {/* Edit Button */}
                             <Button

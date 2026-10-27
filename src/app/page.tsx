@@ -9,6 +9,8 @@ import { CartDrawer } from "@/components/store/CartDrawer";
 import { CheckoutModal } from "@/components/store/CheckoutModal";
 import { WelcomeModal } from "@/components/store/WelcomeModal";
 import { CustomerOrdersModal } from "@/components/store/CustomerOrdersModal";
+import { OrderChatModal } from "@/components/store/OrderChatModal";
+import { Order } from "@/types/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,7 +58,14 @@ export default function PublicStorePage() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatOrder, setChatOrder] = useState<Order | null>(null);
   const [showGuestBanner, setShowGuestBanner] = useState(true);
+
+  const handleOpenChat = (order: Order) => {
+    setChatOrder(order);
+    setIsChatOpen(true);
+  };
 
   const handleSelectGuest = () => {
     setIsWelcomeOpen(false);
@@ -436,6 +445,7 @@ export default function PublicStorePage() {
         customerUser={customerUser}
         onClose={() => setIsCheckoutOpen(false)}
         onConfirmCheckout={performCheckout}
+        onOpenChat={handleOpenChat}
       />
 
       {/* Welcome Gateway Modal (Guest / Sign In / Admin separated) */}
@@ -453,6 +463,15 @@ export default function PublicStorePage() {
         orders={myPurchases}
         customerUser={customerUser}
         onOpenLogin={() => setIsWelcomeOpen(true)}
+        onOpenChat={handleOpenChat}
+      />
+
+      {/* Customer In-Page Direct Chat Modal */}
+      <OrderChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        order={chatOrder}
+        customerUser={customerUser}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Product, ProductInput, CartItem, Order, OrderItem, CustomerUser, OrderInput } from "@/types/store";
+import { Product, ProductInput, CartItem, Order, OrderItem, CustomerUser, OrderInput, ChatMessage, OrderChat, ChatSenderRole } from "@/types/store";
 
 export const DEFAULT_PRODUCTS: Product[] = [
   {
@@ -144,6 +144,7 @@ const STORAGE_KEYS = {
   GUEST_ORDERS: "mini_tienda_guest_orders_session",
   ACCOUNT_SEARCHES_PREFIX: "mini_tienda_account_searches_",
   ACCOUNT_ORDERS_PREFIX: "mini_tienda_account_orders_",
+  CHATS: "mini_tienda_order_chats_v1",
 };
 
 export const PRESET_CATEGORIES = [
@@ -833,4 +834,203 @@ export function loginCustomer(name: string, email: string, phone?: string, addre
 export function logoutCustomer(): void {
   saveCustomer(null);
   notifyChange();
+}
+
+// ==========================================
+// INTERNAL CHAT SYSTEM (SELLER <-> BUYER)
+// ==========================================
+
+export const DEFAULT_CHATS: Record<string, OrderChat> = {
+  "ORD-928410-101": {
+    orderId: "ORD-928410-101",
+    customerName: "Carlos Gómez",
+    customerEmail: "carlos.gomez@gmail.com",
+    customerPhone: "+1 809-555-0143",
+    messages: [
+      {
+        id: "msg-101-1",
+        orderId: "ORD-928410-101",
+        sender: "seller",
+        senderName: "Soporte Mini Tienda",
+        text: "¡Hola Carlos! Tu orden ha sido recibida y confirmada. ¿Tienes alguna pregunta sobre la entrega?",
+        createdAt: "2026-10-22T10:35:00.000Z",
+        readByCustomer: true,
+        readBySeller: true,
+      },
+      {
+        id: "msg-101-2",
+        orderId: "ORD-928410-101",
+        sender: "customer",
+        senderName: "Carlos Gómez",
+        text: "¡Hola! Quisiera saber si pueden entregar en horas de la tarde, después de las 2 PM.",
+        createdAt: "2026-10-22T11:00:00.000Z",
+        readByCustomer: true,
+        readBySeller: false,
+      },
+    ],
+    lastMessage: "¡Hola! Quisiera saber si pueden entregar en horas de la tarde, después de las 2 PM.",
+    lastMessageAt: "2026-10-22T11:00:00.000Z",
+    unreadForAdmin: 1,
+    unreadForCustomer: 0,
+  },
+};
+
+export function getStoredChats(): Record<string, OrderChat> {
+  if (typeof window === "undefined") return DEFAULT_CHATS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CHATS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(DEFAULT_CHATS));
+      return DEFAULT_CHATS;
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("Error reading stored chats:", e);
+    return DEFAULT_CHATS;
+  }
+}
+
+export function saveStoredChats(chats: Record<string, OrderChat>): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(chats));
+  } catch (e) {
+    console.error("Error saving stored chats:", e);
+  }
+}
+
+export function getOrderChat(orderId: string): OrderChat | null {
+  const chats = getStoredChats();
+  return chats[orderId] || null;
+}
+
+export function getOrCreateOrderChat(
+  orderId: string,
+  customerName: string = "Cliente",
+  customerEmail?: string,
+  customerPhone?: string
+): OrderChat {
+  const chats = getStoredChats();
+  if (chats[orderId]) {
+    return chats[orderId];
+  }
+
+  // Create new chat with welcome message from seller
+  const initialMessage: ChatMessage = {
+    id: `msg-${orderId}-${Date.now()}`,
+    orderId,
+    sender: "seller",
+    senderName: "Soporte Mini Tienda",
+    text: `¡Hola ${customerName}! 👋 Gracias por tu compra con ID #${orderId}. Si tienes alguna duda sobre tu pedido o deseas consultar el estado de tu entrega, déjanos tu mensaje aquí y te responderemos enseguida.`,
+    createdAt: new Date().toISOString(),
+    readByCustomer: false,
+    readBySeller: true,
+  };
+
+  const newChat: OrderChat = {
+    orderId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    messages: [initialMessage],
+    lastMessage: initialMessage.text,
+    lastMessageAt: initialMessage.createdAt,
+    unreadForAdmin: 0,
+    unreadForCustomer: 1,
+  };
+
+  chats[orderId] = newChat;
+  saveStoredChats(chats);
+  notifyChange();
+  return newChat;
+}
+
+export function sendChatMessage(
+  orderId: string,
+  sender: ChatSenderRole,
+  senderName: string,
+  text: string,
+  customerMeta?: { name?: string; email?: string; phone?: string }
+): ChatMessage {
+  const chats = getStoredChats();
+  let chat = chats[orderId];
+
+  if (!chat) {
+    chat = getOrCreateOrderChat(
+      orderId,
+      customerMeta?.name || senderName,
+      customerMeta?.email,
+      customerMeta?.phone
+    );
+  }
+
+  const newMessage: ChatMessage = {
+    id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    orderId,
+    sender,
+    senderName,
+    text: text.trim(),
+    createdAt: new Date().toISOString(),
+    readByCustomer: sender === "customer",
+    readBySeller: sender === "seller",
+  };
+
+  chat.messages.push(newMessage);
+  chat.lastMessage = newMessage.text;
+  chat.lastMessageAt = newMessage.createdAt;
+  if (customerMeta?.name) chat.customerName = customerMeta.name;
+  if (customerMeta?.email) chat.customerEmail = customerMeta.email;
+  if (customerMeta?.phone) chat.customerPhone = customerMeta.phone;
+
+  // Recalculate unread counts
+  chat.unreadForAdmin = chat.messages.filter(
+    (m) => m.sender === "customer" && !m.readBySeller
+  ).length;
+  chat.unreadForCustomer = chat.messages.filter(
+    (m) => m.sender === "seller" && !m.readByCustomer
+  ).length;
+
+  chats[orderId] = chat;
+  saveStoredChats(chats);
+  notifyChange();
+  return newMessage;
+}
+
+export function markChatAsRead(orderId: string, reader: "customer" | "seller"): void {
+  const chats = getStoredChats();
+  const chat = chats[orderId];
+  if (!chat) return;
+
+  let changed = false;
+  chat.messages.forEach((m) => {
+    if (reader === "customer" && !m.readByCustomer) {
+      m.readByCustomer = true;
+      changed = true;
+    }
+    if (reader === "seller" && !m.readBySeller) {
+      m.readBySeller = true;
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    chat.unreadForAdmin = chat.messages.filter(
+      (m) => m.sender === "customer" && !m.readBySeller
+    ).length;
+    chat.unreadForCustomer = chat.messages.filter(
+      (m) => m.sender === "seller" && !m.readByCustomer
+    ).length;
+    chats[orderId] = chat;
+    saveStoredChats(chats);
+    notifyChange();
+  }
+}
+
+export function deleteOrderChat(orderId: string): void {
+  const chats = getStoredChats();
+  if (chats[orderId]) {
+    delete chats[orderId];
+    saveStoredChats(chats);
+    notifyChange();
+  }
 }

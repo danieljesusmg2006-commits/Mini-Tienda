@@ -69,3 +69,28 @@ export interface StoreState {
   orders: Order[];
   customer: CustomerUser | null;
 }
+
+export type ChatSenderRole = "customer" | "seller";
+
+export interface ChatMessage {
+  id: string;
+  orderId: string;
+  sender: ChatSenderRole;
+  senderName: string;
+  text: string;
+  createdAt: string;
+  readByCustomer?: boolean;
+  readBySeller?: boolean;
+}
+
+export interface OrderChat {
+  orderId: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  messages: ChatMessage[];
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadForAdmin?: number;
+  unreadForCustomer?: number;
+}
