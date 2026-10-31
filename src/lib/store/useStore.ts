@@ -32,12 +32,75 @@ import {
   getMyPurchases,
   clearGuestSessionData,
   getStoredChats,
+  saveStoredChats,
+  saveOrders,
   getOrderChat,
   getOrCreateOrderChat,
   sendChatMessage as sendChatMessageFn,
   markChatAsRead as markChatAsReadFn,
   deleteOrderChat as deleteOrderChatFn,
 } from "./store";
+
+// Helper to merge local & server chats safely
+function mergeChats(
+  local: Record<string, OrderChat>,
+  server: Record<string, OrderChat>
+): Record<string, OrderChat> {
+  const merged: Record<string, OrderChat> = { ...server };
+
+  for (const [orderId, localChat] of Object.entries(local)) {
+    if (!merged[orderId]) {
+      merged[orderId] = localChat;
+    } else {
+      const serverChat = merged[orderId];
+      const messageMap = new Map<string, ChatMessage>();
+      (serverChat.messages || []).forEach((m) => messageMap.set(m.id, m));
+      (localChat.messages || []).forEach((m) => {
+        if (!messageMap.has(m.id)) {
+          messageMap.set(m.id, m);
+        }
+      });
+      const allMessages = Array.from(messageMap.values()).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      merged[orderId] = {
+        ...localChat,
+        ...serverChat,
+        messages: allMessages,
+        lastMessage:
+          allMessages.length > 0
+            ? allMessages[allMessages.length - 1].text
+            : serverChat.lastMessage || localChat.lastMessage,
+        lastMessageAt:
+          allMessages.length > 0
+            ? allMessages[allMessages.length - 1].createdAt
+            : serverChat.lastMessageAt || localChat.lastMessageAt,
+        unreadForAdmin: allMessages.filter(
+          (m) => m.sender === "customer" && !m.readBySeller
+        ).length,
+        unreadForCustomer: allMessages.filter(
+          (m) => m.sender === "seller" && !m.readByCustomer
+        ).length,
+      };
+    }
+  }
+
+  return merged;
+}
+
+// Helper to merge local & server orders safely
+function mergeOrders(local: Order[], server: Order[]): Order[] {
+  const map = new Map<string, Order>();
+  server.forEach((o) => map.set(o.id, o));
+  local.forEach((o) => {
+    if (!map.has(o.id)) {
+      map.set(o.id, o);
+    }
+  });
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
 
 export function useStore() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -80,7 +143,49 @@ export function useStore() {
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // ------------------------------------------------------------------
+    // Live multi-device synchronization loop
+    // ------------------------------------------------------------------
+    let isMounted = true;
+
+    const syncWithServer = async () => {
+      try {
+        const [chatRes, orderRes] = await Promise.all([
+          fetch("/api/chat", { cache: "no-store" }),
+          fetch("/api/orders", { cache: "no-store" }),
+        ]);
+
+        if (chatRes.ok && isMounted) {
+          const chatData = await chatRes.json();
+          if (chatData.success && chatData.chats) {
+            const currentLocal = getStoredChats();
+            const merged = mergeChats(currentLocal, chatData.chats);
+            setChats(merged);
+            saveStoredChats(merged);
+          }
+        }
+
+        if (orderRes.ok && isMounted) {
+          const orderData = await orderRes.json();
+          if (orderData.success && orderData.orders) {
+            const currentLocal = getStoredOrders();
+            const merged = mergeOrders(currentLocal, orderData.orders);
+            setOrders(merged);
+            saveOrders(merged);
+            setMyPurchases(getMyPurchases());
+          }
+        }
+      } catch {
+        // Silently ignore offline network errors
+      }
+    };
+
+    syncWithServer();
+    const interval = setInterval(syncWithServer, 2000);
+
     return () => {
+      isMounted = false;
+      clearInterval(interval);
       window.removeEventListener("mini_store_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -168,6 +273,36 @@ export function useStore() {
   const performCheckout = useCallback((input: CheckoutInput) => {
     const res = processCheckoutFn(input);
     refreshState();
+
+    if (res.success && res.order) {
+      // Sync to server so admin sees the order across devices
+      fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(res.order),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && data.order) {
+            // Also sync the chat
+            fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: res.order!.id,
+                action: "init",
+                customerMeta: {
+                  name: res.order!.customerName,
+                  email: res.order!.email,
+                  phone: res.order!.phone,
+                },
+              }),
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+
     return res;
   }, [refreshState]);
 
@@ -175,18 +310,31 @@ export function useStore() {
   const createOrder = useCallback((input: OrderInput) => {
     const created = createAdminOrderFn(input);
     refreshState();
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(created),
+    }).catch(() => {});
     return created;
   }, [refreshState]);
 
   const editOrder = useCallback((id: string, input: Partial<Order>) => {
     const updated = updateAdminOrderFn(id, input);
     refreshState();
+    fetch("/api/orders", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...input }),
+    }).catch(() => {});
     return updated;
   }, [refreshState]);
 
   const removeOrder = useCallback((id: string) => {
     const success = deleteAdminOrderFn(id);
     refreshState();
+    fetch(`/api/orders?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }).catch(() => {});
     return success;
   }, [refreshState]);
 
@@ -207,14 +355,47 @@ export function useStore() {
     text: string,
     customerMeta?: { name?: string; email?: string; phone?: string }
   ) => {
+    // 1. Optimistic instant local update
     const msg = sendChatMessageFn(orderId, sender, senderName, text, customerMeta);
     refreshState();
+
+    // 2. Broadcast to server for multi-device delivery
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        sender,
+        senderName,
+        text,
+        customerMeta,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.chat) {
+          const localChats = getStoredChats();
+          localChats[orderId] = data.chat;
+          saveStoredChats(localChats);
+          setChats({ ...localChats });
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not sync message to server immediately:", err);
+      });
+
     return msg;
   }, [refreshState]);
 
   const markChatAsRead = useCallback((orderId: string, reader: "customer" | "seller") => {
     markChatAsReadFn(orderId, reader);
     refreshState();
+
+    fetch("/api/chat", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, reader }),
+    }).catch(() => {});
   }, [refreshState]);
 
   const getOrCreateChat = useCallback((
@@ -225,12 +406,30 @@ export function useStore() {
   ) => {
     const chat = getOrCreateOrderChat(orderId, customerName, customerEmail, customerPhone);
     refreshState();
+
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        action: "init",
+        customerMeta: {
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+        },
+      }),
+    }).catch(() => {});
+
     return chat;
   }, [refreshState]);
 
   const deleteChat = useCallback((orderId: string) => {
     deleteOrderChatFn(orderId);
     refreshState();
+    fetch(`/api/chat?orderId=${encodeURIComponent(orderId)}`, {
+      method: "DELETE",
+    }).catch(() => {});
   }, [refreshState]);
 
   const totalUnreadAdminMessages = useMemo(() => {
