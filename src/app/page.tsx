@@ -244,7 +244,7 @@ export default function PublicStorePage() {
               <div className="p-2.5 sm:p-3.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-950/90 transition-colors border border-indigo-500/40 text-xs text-indigo-200 flex items-center justify-between gap-2 sm:gap-3 group cursor-pointer h-full">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span className="text-[11px] sm:text-xs font-medium">Panel Admin</span>
+                  <span className="text-[11px] sm:text-xs font-medium">Panel Vendedor</span>
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </div>
@@ -468,11 +468,11 @@ export default function PublicStorePage() {
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 mt-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2 transition-colors">
         <p className="font-semibold text-slate-700 dark:text-slate-300">Mini Tienda Digital • Catálogo y Comercio Electrónico</p>
         <p className="text-slate-400 dark:text-slate-500">
-          Desarrollado exclusivamente con PNPM y Next.js • Panel Administrativo protegido & Tienda Pública integrada
+          Desarrollado exclusivamente con PNPM y Next.js • Panel del Vendedor protegido & Tienda Pública integrada
         </p>
         <div className="pt-2">
           <Link href="/admin" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-            Acceso Superusuario al Panel Administrativo →
+            Acceso al Panel del Vendedor →
           </Link>
         </div>
       </footer>

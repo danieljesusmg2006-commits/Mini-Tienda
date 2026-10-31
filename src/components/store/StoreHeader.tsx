@@ -5,7 +5,7 @@ import { CustomerUser } from "@/types/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { Store, ShoppingCart, ShieldCheck, User, LogOut, Sparkles, ShoppingBag, Clock } from "lucide-react";
+import { Store, ShoppingCart, ShieldCheck, User, LogOut, Sparkles, ShoppingBag, Clock, LogIn } from "lucide-react";
 
 interface StoreHeaderProps {
   cartCount: number;
@@ -71,12 +71,12 @@ export function StoreHeader({
             <button
               type="button"
               onClick={onOpenWelcome}
-              className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors cursor-pointer font-medium shadow-2xs h-8 sm:h-9"
-              title="Modo Invitado: Las compras y búsquedas se borrarán al cerrar la página. Inicia sesión para guardarlas permanentemente."
+              className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer font-semibold shadow-2xs h-8 sm:h-9"
+              title="Inicia sesión para guardar tus pedidos permanentemente y comunicarte con el vendedor."
             >
-              <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="hidden sm:inline">Invitado (Temporal)</span>
-              <span className="sm:hidden">Invitado</span>
+              <LogIn className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="hidden sm:inline">Iniciar Sesión</span>
+              <span className="sm:hidden">Ingresar</span>
             </button>
           )}
 
@@ -101,16 +101,16 @@ export function StoreHeader({
           {/* Theme Toggle (Sun in light mode, Moon in dark mode) */}
           <ThemeToggle />
 
-          {/* Link to Admin Panel (Mobile Friendly) */}
+          {/* Link to Seller Panel (Mobile Friendly) */}
           <Link href="/admin">
             <Button
               variant="outline"
               size="sm"
               className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-xs text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-300 dark:border-slate-700 shadow-2xs p-1.5 sm:px-2.5 sm:py-1.5 h-8 sm:h-9"
-              title="Acceder al Panel Administrativo"
+              title="Acceder al Panel del Vendedor"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span className="hidden md:inline">Panel Admin</span>
+              <span className="hidden md:inline">Panel Vendedor</span>
             </Button>
           </Link>
 

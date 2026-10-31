@@ -289,7 +289,7 @@ export function ProductDetailModal({
                         className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all cursor-pointer shadow-md shadow-indigo-500/20"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        <span>Comunicarse con el vendedor (Admin)</span>
+                        <span>Comunicarse con el vendedor</span>
                       </button>
                     </div>
                   )}

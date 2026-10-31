@@ -30,7 +30,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     category: "Accesorios",
     imageUrl: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80",
     stock: 22,
-    description: "Mochila ergonómica de diseño moderno fabricada con tela Oxford de alta densidad resistente al agua y a los arañazos. Cuenta con compartimento acolchado para laptops de hasta 15.6 pulgadas, puerto de carga USB externo y múltiples bolsillos organizadores de seguridad.",
+    description: "",
     createdAt: "2026-10-22T10:10:00.000Z",
     updatedAt: "2026-10-22T10:10:00.000Z",
   },
@@ -52,7 +52,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     category: "Moda",
     imageUrl: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&auto=format&fit=crop&q=80",
     stock: 4,
-    description: "Gafas de sol de estilo aviador clásico con lentes polarizadas de protección UV400 completa que eliminan el deslumbramiento y protegen tus ojos del sol. Montura de aleación metálica ultraligera, resistente a la corrosión y almohadillas nasales de silicona ajustables.",
+    description: "",
     createdAt: "2026-10-22T10:20:00.000Z",
     updatedAt: "2026-10-22T10:20:00.000Z",
   },
@@ -138,7 +138,7 @@ export const DEFAULT_ADMIN_USERNAME = "admin";
 export const DEFAULT_ADMIN_PASSWORD = "1234";
 
 const STORAGE_KEYS = {
-  PRODUCTS: "mini_tienda_products_v1",
+  PRODUCTS: "mini_tienda_products_v2",
   PASSWORD: "mini_tienda_admin_password_v1",
   AUTH: "mini_tienda_auth_session",
   CART: "mini_tienda_cart_v1",
