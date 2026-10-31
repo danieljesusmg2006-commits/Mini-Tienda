@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
         orderId,
         customerMeta?.name || "Cliente",
         customerMeta?.email,
-        customerMeta?.phone
+        customerMeta?.phone,
+        customerMeta
       );
       return NextResponse.json({ success: true, chat });
     }

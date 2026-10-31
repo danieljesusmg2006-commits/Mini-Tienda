@@ -84,8 +84,15 @@ export interface ChatMessage {
   readBySeller?: boolean;
 }
 
+export type ChatType = "PURCHASE" | "INQUIRY";
+
 export interface OrderChat {
   orderId: string;
+  chatType?: ChatType;
+  productId?: string;
+  productName?: string;
+  productPrice?: number;
+  productImageUrl?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;

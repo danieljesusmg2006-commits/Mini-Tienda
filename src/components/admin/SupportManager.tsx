@@ -22,6 +22,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Filter,
+  ShoppingBag,
+  HelpCircle,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,11 +34,18 @@ interface SupportManagerProps {
   onViewOrderDetail?: (order: Order) => void;
 }
 
-const QUICK_SELLER_REPLIES = [
+const QUICK_PURCHASE_REPLIES = [
   "¡Hola! Tu pedido ya se encuentra en preparación para despacho.",
   "Confirmamos el pago correctamente. ¡Muchas gracias por tu compra!",
   "El repartidor pasará hoy en horario de la tarde.",
   "Hemos tomado nota de tus indicaciones para la entrega.",
+];
+
+const QUICK_INQUIRY_REPLIES = [
+  "¡Hola! Sí tenemos disponibilidad de este producto con entrega inmediata.",
+  "El producto cuenta con garantía oficial de la tienda y entrega rápida.",
+  "¿En qué dirección o zona te encuentras para coordinar el despacho?",
+  "Puedes realizar tu compra directamente en la página con entrega garantizada.",
 ];
 
 export function SupportManager({
@@ -48,7 +58,9 @@ export function SupportManager({
     initialOrderId || null
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"ALL" | "UNREAD" | "ANSWERED">("ALL");
+  const [filterType, setFilterType] = useState<
+    "ALL" | "UNREAD" | "PURCHASES" | "INQUIRIES" | "ANSWERED"
+  >("ALL");
   const [replyText, setReplyText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +75,9 @@ export function SupportManager({
   useEffect(() => {
     orders.forEach((o) => {
       if (!chats[o.id]) {
-        getOrCreateChat(o.id, o.customerName, o.email, o.phone);
+        getOrCreateChat(o.id, o.customerName, o.email, o.phone, {
+          chatType: "PURCHASE",
+        });
       }
     });
   }, [orders, chats, getOrCreateChat]);
@@ -95,11 +109,53 @@ export function SupportManager({
     }
   }, [selectedOrderId, chats[selectedOrderId || ""]?.messages?.length]);
 
+  // Distinguish between a completed purchase vs pre-sale inquiry
+  const getChatTypeInfo = (chat: OrderChat) => {
+    const isPurchase =
+      chat.chatType === "PURCHASE" ||
+      orders.some((o) => o.id === chat.orderId) ||
+      chat.orderId.startsWith("ORD-");
+
+    if (isPurchase) {
+      return {
+        type: "PURCHASE" as const,
+        label: "🛒 Compra Realizada",
+        shortLabel: "Compra",
+        badgeClass:
+          "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
+        icon: ShoppingBag,
+      };
+    }
+
+    return {
+      type: "INQUIRY" as const,
+      label: "❓ Solo Pregunta / Consulta",
+      shortLabel: "Consulta",
+      badgeClass:
+        "bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800",
+      icon: HelpCircle,
+    };
+  };
+
+  const allChatsList = useMemo(() => Object.values(chats), [chats]);
+
+  const purchasesCount = useMemo(() => {
+    return allChatsList.filter((c) => {
+      return (
+        c.chatType === "PURCHASE" ||
+        orders.some((o) => o.id === c.orderId) ||
+        c.orderId.startsWith("ORD-")
+      );
+    }).length;
+  }, [allChatsList, orders]);
+
+  const inquiriesCount = useMemo(() => {
+    return Math.max(0, allChatsList.length - purchasesCount);
+  }, [allChatsList.length, purchasesCount]);
+
   // Sorted and filtered list of conversations
   const conversationsList = useMemo(() => {
-    const list = Object.values(chats);
-
-    return list
+    return allChatsList
       .filter((c) => {
         const query = searchQuery.trim().toLowerCase();
         const matchesQuery =
@@ -107,12 +163,24 @@ export function SupportManager({
           c.orderId.toLowerCase().includes(query) ||
           c.customerName.toLowerCase().includes(query) ||
           (c.customerEmail && c.customerEmail.toLowerCase().includes(query)) ||
+          (c.productName && c.productName.toLowerCase().includes(query)) ||
           (c.lastMessage && c.lastMessage.toLowerCase().includes(query));
 
         if (!matchesQuery) return false;
 
+        const isPurchase =
+          c.chatType === "PURCHASE" ||
+          orders.some((o) => o.id === c.orderId) ||
+          c.orderId.startsWith("ORD-");
+
         if (filterType === "UNREAD") {
           return (c.unreadForAdmin || 0) > 0;
+        }
+        if (filterType === "PURCHASES") {
+          return isPurchase;
+        }
+        if (filterType === "INQUIRIES") {
+          return !isPurchase;
         }
         if (filterType === "ANSWERED") {
           return (c.unreadForAdmin || 0) === 0;
@@ -128,12 +196,11 @@ export function SupportManager({
         const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
         return dateB - dateA;
       });
-  }, [chats, searchQuery, filterType]);
+  }, [allChatsList, searchQuery, filterType, orders]);
 
   // Auto-select first chat on desktop if none selected
   useEffect(() => {
     if (!selectedOrderId && conversationsList.length > 0) {
-      // Only set on larger screens where split view is visible
       if (typeof window !== "undefined" && window.innerWidth >= 768) {
         setSelectedOrderId(conversationsList[0].orderId);
       }
@@ -145,6 +212,16 @@ export function SupportManager({
     ? orders.find((o) => o.id === selectedOrderId)
     : null;
 
+  const activeTypeInfo = activeChat
+    ? getChatTypeInfo(activeChat)
+    : {
+        type: "PURCHASE" as const,
+        label: "🛒 Compra Realizada",
+        shortLabel: "Compra",
+        badgeClass: "bg-slate-100 text-slate-800",
+        icon: ShoppingBag,
+      };
+
   const unreadOtherChat = useMemo(() => {
     return Object.values(chats).find(
       (c) => c.orderId !== selectedOrderId && (c.unreadForAdmin || 0) > 0
@@ -153,25 +230,28 @@ export function SupportManager({
 
   const handleSendReply = (customText?: string) => {
     const text = (customText || replyText).trim();
-    if (!text || !selectedOrderId) return;
+    if (!text || !selectedOrderId || !activeChat) return;
 
     sendChatMessage(
       selectedOrderId,
       "seller",
       "Soporte Mini Tienda",
       text,
-      activeOrder
-        ? {
-            name: activeOrder.customerName,
-            email: activeOrder.email,
-            phone: activeOrder.phone,
-          }
-        : undefined
+      {
+        name: activeChat.customerName,
+        email: activeChat.customerEmail,
+        phone: activeChat.customerPhone,
+        chatType: activeChat.chatType,
+        productId: activeChat.productId,
+        productName: activeChat.productName,
+        productPrice: activeChat.productPrice,
+        productImageUrl: activeChat.productImageUrl,
+      }
     );
 
     setReplyText("");
     toast.success("Respuesta enviada", {
-      description: `Mensaje entregado al cliente de la orden #${selectedOrderId}`,
+      description: `Mensaje entregado a ${activeChat.customerName}`,
     });
   };
 
@@ -197,7 +277,7 @@ export function SupportManager({
     }
   };
 
-  const totalUnread = Object.values(chats).reduce(
+  const totalUnread = allChatsList.reduce(
     (acc, c) => acc + (c.unreadForAdmin || 0),
     0
   );
@@ -213,7 +293,7 @@ export function SupportManager({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                Mensajes y Soporte al Comprador
+                Mensajes y Soporte al Cliente
               </h2>
               {totalUnread > 0 ? (
                 <Badge className="bg-rose-500 hover:bg-rose-600 text-white text-[10px] px-2 py-0.5 animate-pulse font-bold">
@@ -226,7 +306,7 @@ export function SupportManager({
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Responde las consultas directas de los clientes sobre sus pedidos y envíos en tiempo real.
+              Distingue rápidamente entre compradores con pedidos confirmados y consultas previas a la compra.
             </p>
           </div>
         </div>
@@ -234,11 +314,12 @@ export function SupportManager({
         {/* Status Count Pills */}
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-medium flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            En vivo
+            <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Compras: <strong>{purchasesCount}</strong></span>
           </span>
-          <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-medium">
-            Total Chats: <strong>{Object.keys(chats).length}</strong>
+          <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-medium flex items-center gap-1.5">
+            <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+            <span>Consultas: <strong>{inquiriesCount}</strong></span>
           </span>
           <span className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 font-medium">
             Sin responder: <strong>{totalUnread}</strong>
@@ -247,10 +328,10 @@ export function SupportManager({
       </div>
 
       {/* Main Chat Interface: Dual Pane for Desktop, View Switcher for Mobile */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden h-[620px] flex flex-col md:flex-row transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden h-[640px] flex flex-col md:flex-row transition-colors">
         {/* Left Side: Conversations List (Hidden on mobile if a chat is selected) */}
         <div
-          className={`w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full ${
+          className={`w-full md:w-84 lg:w-96 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full ${
             selectedOrderId ? "hidden md:flex" : "flex"
           }`}
         >
@@ -262,7 +343,7 @@ export function SupportManager({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por cliente o ID de orden..."
+                placeholder="Buscar cliente, orden o producto..."
                 className="pl-8 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white h-9"
               />
               {searchQuery && (
@@ -277,7 +358,7 @@ export function SupportManager({
             </div>
 
             {/* Filter buttons */}
-            <div className="flex items-center gap-1.5 text-[11px]">
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
               <button
                 type="button"
                 onClick={() => setFilterType("ALL")}
@@ -287,7 +368,7 @@ export function SupportManager({
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                 }`}
               >
-                Todos ({Object.keys(chats).length})
+                Todos ({allChatsList.length})
               </button>
               <button
                 type="button"
@@ -304,6 +385,30 @@ export function SupportManager({
                     {totalUnread}
                   </span>
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("PURCHASES")}
+                className={`px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                  filterType === "PURCHASES"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                <ShoppingBag className="w-3 h-3" />
+                <span>Compras ({purchasesCount})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("INQUIRIES")}
+                className={`px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                  filterType === "INQUIRIES"
+                    ? "bg-amber-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                <HelpCircle className="w-3 h-3" />
+                <span>Consultas ({inquiriesCount})</span>
               </button>
               <button
                 type="button"
@@ -327,14 +432,16 @@ export function SupportManager({
                 <p className="text-xs font-semibold">No hay conversaciones</p>
                 <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
                   {searchQuery
-                    ? "Ningún chat coincide con la búsqueda."
-                    : "Los mensajes de los clientes sobre sus pedidos aparecerán aquí."}
+                    ? "Ningún chat coincide con la búsqueda o filtro seleccionado."
+                    : "Los mensajes y consultas de los clientes aparecerán aquí."}
                 </p>
               </div>
             ) : (
               conversationsList.map((chat) => {
                 const isSelected = selectedOrderId === chat.orderId;
                 const hasUnread = (chat.unreadForAdmin || 0) > 0;
+                const typeInfo = getChatTypeInfo(chat);
+                const TypeIcon = typeInfo.icon;
 
                 return (
                   <button
@@ -378,10 +485,16 @@ export function SupportManager({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] font-mono font-semibold text-indigo-600 dark:text-indigo-400">
-                          #{chat.orderId}
+                      {/* Admin-only distinction badge */}
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${typeInfo.badgeClass}`}
+                          title={typeInfo.type === "PURCHASE" ? "Cliente con compra realizada" : "Cliente preguntando sin compra aún"}
+                        >
+                          <TypeIcon className="w-2.5 h-2.5 shrink-0" />
+                          <span>{typeInfo.label}</span>
                         </span>
+
                         {hasUnread && (
                           <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-rose-500 text-white">
                             {chat.unreadForAdmin} nuevo{chat.unreadForAdmin && chat.unreadForAdmin > 1 ? "s" : ""}
@@ -389,8 +502,21 @@ export function SupportManager({
                         )}
                       </div>
 
+                      {/* Reference / Product subtitle */}
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        {typeInfo.type === "PURCHASE" ? (
+                          <span className="font-mono text-indigo-600 dark:text-indigo-400 font-semibold truncate">
+                            Ref: #{chat.orderId}
+                          </span>
+                        ) : (
+                          <span className="text-amber-800 dark:text-amber-300 font-medium truncate">
+                            {chat.productName ? `Sobre: ${chat.productName}` : "Consulta previa de producto"}
+                          </span>
+                        )}
+                      </div>
+
                       <p
-                        className={`text-[11px] truncate mt-1 ${
+                        className={`text-[11px] truncate mt-0.5 ${
                           hasUnread
                             ? "font-semibold text-slate-900 dark:text-white"
                             : "text-slate-500 dark:text-slate-400"
@@ -437,39 +563,63 @@ export function SupportManager({
                   </div>
 
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                         {activeChat.customerName}
                       </h3>
-                      {activeOrder && (
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-                          {activeOrder.status}
-                        </Badge>
-                      )}
+
+                      {/* Admin-only classification badge */}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] py-0 px-2 font-bold flex items-center gap-1 ${activeTypeInfo.badgeClass}`}
+                      >
+                        <activeTypeInfo.icon className="w-3 h-3" />
+                        <span>{activeTypeInfo.label}</span>
+                      </Badge>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                      <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
-                        #{activeChat.orderId}
-                      </span>
-                      {activeOrder && (
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      {activeTypeInfo.type === "PURCHASE" ? (
                         <>
-                          <span>•</span>
-                          <span>Total: ${activeOrder.total.toFixed(2)}</span>
+                          <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
+                            Orden #{activeChat.orderId}
+                          </span>
+                          {activeOrder && (
+                            <>
+                              <span>•</span>
+                              <span>Total: ${activeOrder.total.toFixed(2)}</span>
+                              <span>•</span>
+                              <Badge variant="outline" className="text-[9px] py-0 px-1 font-semibold">
+                                {activeOrder.status}
+                              </Badge>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-amber-700 dark:text-amber-400 font-bold truncate">
+                            {activeChat.productName ? `Consulta sobre: ${activeChat.productName}` : "Consulta general"}
+                          </span>
+                          {activeChat.productPrice ? (
+                            <>
+                              <span>•</span>
+                              <span>${activeChat.productPrice.toFixed(2)}</span>
+                            </>
+                          ) : null}
                         </>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* View Order Detail Link */}
+                {/* View Order Detail Link if purchase */}
                 {activeOrder && onViewOrderDetail && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => onViewOrderDetail(activeOrder)}
-                    className="text-xs gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 h-8"
+                    className="text-xs gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 h-8 shrink-0 cursor-pointer"
                   >
                     <Package className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span className="hidden sm:inline">Ver Pedido</span>
@@ -490,29 +640,59 @@ export function SupportManager({
                     type="button"
                     size="sm"
                     onClick={() => setSelectedOrderId(unreadOtherChat.orderId)}
-                    className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] h-7 px-3 shrink-0 font-medium"
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] h-7 px-3 shrink-0 font-medium cursor-pointer"
                   >
                     Ver este chat
                   </Button>
                 </div>
               )}
 
-              {/* Order Info Strip */}
-              {activeOrder && (
-                <div className="px-4 py-2 bg-slate-100/70 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 shrink-0 gap-2 overflow-x-auto no-scrollbar">
-                  <div className="flex items-center gap-2 truncate">
-                    <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-                    <span className="truncate">{activeOrder.email}</span>
+              {/* Context Ribbon: Product Inquiry vs Purchase Order (Admin view) */}
+              {activeTypeInfo.type === "INQUIRY" ? (
+                <div className="px-4 py-2.5 bg-amber-500/10 dark:bg-amber-950/40 border-b border-amber-300/60 dark:border-amber-800/60 flex items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200 shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {activeChat.productImageUrl && (
+                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-amber-300 dark:border-amber-700 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={activeChat.productImageUrl}
+                          alt={activeChat.productName || "Producto"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-bold text-xs truncate">
+                        {activeChat.productName ? `Consulta sobre: ${activeChat.productName}` : "Consulta general previa a compra"}
+                        {activeChat.productPrice ? ` • $${activeChat.productPrice.toFixed(2)}` : ""}
+                      </p>
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                        👤 <strong>Cliente:</strong> {activeChat.customerEmail || "Sin correo"} • ⚠️ <em>Este usuario aún no ha realizado compra. Está solicitando información previa.</em>
+                      </p>
+                    </div>
                   </div>
+                  <Badge className="shrink-0 bg-amber-600 text-white text-[10px] font-bold">
+                    Solo Preguntando
+                  </Badge>
+                </div>
+              ) : activeOrder ? (
+                <div className="px-4 py-2 bg-emerald-500/10 dark:bg-emerald-950/40 border-b border-emerald-300/60 dark:border-emerald-800/60 flex items-center justify-between text-[11px] text-emerald-950 dark:text-emerald-200 shrink-0 gap-2 overflow-x-auto no-scrollbar">
                   <div className="flex items-center gap-2 truncate">
-                    <Phone className="w-3 h-3 text-slate-400 shrink-0" />
-                    <span>{activeOrder.phone}</span>
+                    <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="truncate">
+                      <strong>Artículos:</strong> {activeOrder.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
+                    </span>
                   </div>
-                  <div className="shrink-0 font-medium text-emerald-600 dark:text-emerald-400">
-                    Pago: {activeOrder.paymentMethod}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                      <Mail className="w-3 h-3" />
+                      <span>{activeOrder.email}</span>
+                    </div>
+                    <span>Pago: <strong>{activeOrder.paymentMethod}</strong></span>
+                    <span>Total: <strong>${activeOrder.total.toFixed(2)}</strong></span>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Messages Thread */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -557,7 +737,7 @@ export function SupportManager({
                   <Sparkles className="w-3 h-3 text-indigo-500" />
                   <span>Respuestas rápidas:</span>
                 </div>
-                {QUICK_SELLER_REPLIES.map((reply, idx) => (
+                {(activeTypeInfo.type === "INQUIRY" ? QUICK_INQUIRY_REPLIES : QUICK_PURCHASE_REPLIES).map((reply, idx) => (
                   <button
                     key={idx}
                     type="button"
@@ -582,7 +762,11 @@ export function SupportManager({
                     type="text"
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    placeholder={`Responder a ${activeChat.customerName} sobre la orden #${activeChat.orderId}...`}
+                    placeholder={
+                      activeTypeInfo.type === "INQUIRY"
+                        ? `Responder consulta de ${activeChat.customerName} sobre ${activeChat.productName || "producto"}...`
+                        : `Responder a ${activeChat.customerName} sobre la orden #${activeChat.orderId}...`
+                    }
                     className="flex-1 text-xs bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus-visible:ring-indigo-500 h-9 sm:h-10"
                     autoFocus
                   />
@@ -608,7 +792,7 @@ export function SupportManager({
                 Ninguna conversación seleccionada
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
-                Selecciona un chat del listado de la izquierda para ver los mensajes del cliente y responder sus dudas sobre el pedido.
+                Selecciona un chat del listado de la izquierda para ver las dudas de clientes con compra realizada o consultas sobre productos.
               </p>
             </div>
           )}

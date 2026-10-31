@@ -468,7 +468,16 @@ export function useStore() {
     sender: ChatSenderRole,
     senderName: string,
     text: string,
-    customerMeta?: { name?: string; email?: string; phone?: string }
+    customerMeta?: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      chatType?: "PURCHASE" | "INQUIRY";
+      productId?: string;
+      productName?: string;
+      productPrice?: number;
+      productImageUrl?: string;
+    }
   ) => {
     // 1. Optimistic instant local update
     const msg = sendChatMessageFn(orderId, sender, senderName, text, customerMeta);
@@ -551,9 +560,16 @@ export function useStore() {
     orderId: string,
     customerName?: string,
     customerEmail?: string,
-    customerPhone?: string
+    customerPhone?: string,
+    extra?: {
+      chatType?: "PURCHASE" | "INQUIRY";
+      productId?: string;
+      productName?: string;
+      productPrice?: number;
+      productImageUrl?: string;
+    }
   ) => {
-    const chat = getOrCreateOrderChat(orderId, customerName, customerEmail, customerPhone);
+    const chat = getOrCreateOrderChat(orderId, customerName, customerEmail, customerPhone, extra);
     refreshState();
 
     fetch("/api/chat", {
@@ -566,6 +582,7 @@ export function useStore() {
           name: customerName,
           email: customerEmail,
           phone: customerPhone,
+          ...extra,
         },
       }),
     }).catch(() => {});

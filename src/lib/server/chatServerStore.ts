@@ -111,19 +111,37 @@ export function getOrCreateServerChat(
   orderId: string,
   customerName: string = "Cliente",
   customerEmail?: string,
-  customerPhone?: string
+  customerPhone?: string,
+  extra?: {
+    chatType?: "PURCHASE" | "INQUIRY";
+    productId?: string;
+    productName?: string;
+    productPrice?: number;
+    productImageUrl?: string;
+  }
 ): OrderChat {
   const chats = getServerChats();
   if (chats[orderId]) {
+    // If extra fields are provided, ensure they are synced
+    if (extra?.chatType) chats[orderId].chatType = extra.chatType;
+    if (extra?.productId) chats[orderId].productId = extra.productId;
+    if (extra?.productName) chats[orderId].productName = extra.productName;
+    if (extra?.productPrice) chats[orderId].productPrice = extra.productPrice;
+    if (extra?.productImageUrl) chats[orderId].productImageUrl = extra.productImageUrl;
     return chats[orderId];
   }
+
+  const isInquiry = extra?.chatType === "INQUIRY" || orderId.startsWith("INQ-");
+  const welcomeText = isInquiry
+    ? `¡Hola ${customerName}! 👋 Gracias por tu interés en "${extra?.productName || 'nuestros productos'}". Si tienes alguna duda sobre especificaciones, disponibilidad o entrega, déjanos tu consulta aquí y te responderemos enseguida.`
+    : `¡Hola ${customerName}! 👋 Gracias por tu compra con ID #${orderId}. Si tienes alguna duda sobre tu pedido o deseas consultar el estado de tu entrega, déjanos tu mensaje aquí y te responderemos enseguida.`;
 
   const initialMessage: ChatMessage = {
     id: `msg-${orderId}-${Date.now()}`,
     orderId,
     sender: "seller",
     senderName: "Soporte Mini Tienda",
-    text: `¡Hola ${customerName}! 👋 Gracias por tu compra con ID #${orderId}. Si tienes alguna duda sobre tu pedido o deseas consultar el estado de tu entrega, déjanos tu mensaje aquí y te responderemos enseguida.`,
+    text: welcomeText,
     createdAt: new Date().toISOString(),
     readByCustomer: false,
     readBySeller: true,
@@ -131,6 +149,11 @@ export function getOrCreateServerChat(
 
   const newChat: OrderChat = {
     orderId,
+    chatType: isInquiry ? "INQUIRY" : "PURCHASE",
+    productId: extra?.productId,
+    productName: extra?.productName,
+    productPrice: extra?.productPrice,
+    productImageUrl: extra?.productImageUrl,
     customerName,
     customerEmail,
     customerPhone,
@@ -151,7 +174,16 @@ export function addServerChatMessage(
   sender: ChatSenderRole,
   senderName: string,
   text: string,
-  customerMeta?: { name?: string; email?: string; phone?: string },
+  customerMeta?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    chatType?: "PURCHASE" | "INQUIRY";
+    productId?: string;
+    productName?: string;
+    productPrice?: number;
+    productImageUrl?: string;
+  },
   messageId?: string,
   createdAt?: string
 ): { message: ChatMessage; chat: OrderChat } {
@@ -163,7 +195,8 @@ export function addServerChatMessage(
       orderId,
       customerMeta?.name || senderName,
       customerMeta?.email,
-      customerMeta?.phone
+      customerMeta?.phone,
+      customerMeta
     );
   }
 
@@ -201,6 +234,11 @@ export function addServerChatMessage(
   if (customerMeta?.name) chat.customerName = customerMeta.name;
   if (customerMeta?.email) chat.customerEmail = customerMeta.email;
   if (customerMeta?.phone) chat.customerPhone = customerMeta.phone;
+  if (customerMeta?.chatType) chat.chatType = customerMeta.chatType;
+  if (customerMeta?.productId) chat.productId = customerMeta.productId;
+  if (customerMeta?.productName) chat.productName = customerMeta.productName;
+  if (customerMeta?.productPrice) chat.productPrice = customerMeta.productPrice;
+  if (customerMeta?.productImageUrl) chat.productImageUrl = customerMeta.productImageUrl;
 
   chat.unreadForAdmin = chat.messages.filter(
     (m) => m.sender === "customer" && !m.readBySeller

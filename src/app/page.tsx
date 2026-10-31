@@ -14,6 +14,7 @@ import { ProductDetailModal } from "@/components/store/ProductDetailModal";
 import { Order, Product } from "@/types/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Search,
   SlidersHorizontal,
@@ -58,15 +59,45 @@ export default function PublicStorePage() {
   // Modals State
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
+  const [chatProduct, setChatProduct] = useState<Product | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showGuestBanner, setShowGuestBanner] = useState(true);
 
   const handleOpenChat = (order: Order) => {
+    if (!customerUser) {
+      toast.error("Inicio de sesión requerido", {
+        description: "Debes iniciar sesión para chatear con el vendedor sobre tu pedido.",
+        action: {
+          label: "Iniciar sesión",
+          onClick: () => setIsWelcomeOpen(true),
+        },
+      });
+      setIsWelcomeOpen(true);
+      return;
+    }
+    setChatProduct(null);
     setChatOrder(order);
+    setIsChatOpen(true);
+  };
+
+  const handleOpenProductInquiry = (product: Product) => {
+    if (!customerUser) {
+      toast.error("Inicio de sesión requerido", {
+        description: "Debes iniciar sesión para comunicarte con el vendedor sobre este producto.",
+        action: {
+          label: "Iniciar sesión",
+          onClick: () => setIsWelcomeOpen(true),
+        },
+      });
+      setIsWelcomeOpen(true);
+      return;
+    }
+    setChatOrder(null);
+    setChatProduct(product);
     setIsChatOpen(true);
   };
 
@@ -490,9 +521,15 @@ export default function PublicStorePage() {
       {/* Customer In-Page Direct Chat Modal */}
       <OrderChatModal
         isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
+        onClose={() => {
+          setIsChatOpen(false);
+          setChatOrder(null);
+          setChatProduct(null);
+        }}
         order={chatOrder}
+        product={chatProduct}
         customerUser={customerUser}
+        onOpenLogin={() => setIsWelcomeOpen(true)}
       />
 
       {/* Product Detail Modal with Full Description & Actions */}
@@ -505,7 +542,10 @@ export default function PublicStorePage() {
             ? cart.find((item) => item.product.id === selectedProduct.id)?.quantity || 0
             : 0
         }
+        customerUser={customerUser}
         onAddToCart={addItemToCart}
+        onOpenChatAboutProduct={handleOpenProductInquiry}
+        onOpenLogin={() => setIsWelcomeOpen(true)}
       />
     </div>
   );

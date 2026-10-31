@@ -53,6 +53,18 @@ export function CustomerOrdersModal({
     const query = lookupId.trim().toUpperCase();
     if (!query) return;
 
+    if (!customerUser) {
+      toast.error("Inicio de sesión requerido", {
+        description: "Debes iniciar sesión para comunicarte con el vendedor.",
+        action: {
+          label: "Iniciar sesión",
+          onClick: () => onOpenLogin(),
+        },
+      });
+      onOpenLogin();
+      return;
+    }
+
     const found = allStoreOrders.find(
       (o) =>
         o.id.toUpperCase() === query ||
@@ -325,6 +337,17 @@ export function CustomerOrdersModal({
                       variant="outline"
                       size="sm"
                       onClick={() => {
+                        if (!customerUser) {
+                          toast.error("Inicio de sesión requerido", {
+                            description: "Debes iniciar sesión para comunicarte con el vendedor sobre este pedido.",
+                            action: {
+                              label: "Iniciar sesión",
+                              onClick: () => onOpenLogin(),
+                            },
+                          });
+                          onOpenLogin();
+                          return;
+                        }
                         onClose();
                         onOpenChat(order);
                       }}
