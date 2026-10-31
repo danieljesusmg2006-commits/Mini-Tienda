@@ -7,6 +7,7 @@ import {
   deleteServerChat,
 } from "@/lib/server/chatServerStore";
 import { syncChatMessageToSupabase } from "@/lib/server/supabaseSync";
+import { broadcastCloudEvent } from "@/lib/sync/cloudSync";
 import { ChatSenderRole } from "@/types/store";
 
 // Prevent Next.js from aggressively caching this route handler
@@ -38,6 +39,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { orderId, sender, senderName, text, customerMeta, action } = body;
+
+    console.log(`[API /api/chat POST] orderId: ${orderId}, sender: ${sender}, action: ${action}, text: "${text?.slice(0, 30)}"`);
 
     if (!orderId) {
       return NextResponse.json(
@@ -74,6 +77,14 @@ export async function POST(request: NextRequest) {
 
     // Sync to Supabase in background if configured
     syncChatMessageToSupabase(result.chat, result.message).catch(() => {});
+
+    // Broadcast across all connected devices in real time
+    broadcastCloudEvent({
+      type: "CHAT_MESSAGE",
+      orderId,
+      message: result.message,
+      customerMeta,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

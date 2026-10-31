@@ -36,6 +36,7 @@ export default function PublicStorePage() {
     cartCount,
     customerUser,
     myPurchases,
+    orders,
     searchHistory,
     addSearchQuery,
     clearSearches,
@@ -66,6 +67,23 @@ export default function PublicStorePage() {
     setChatOrder(order);
     setIsChatOpen(true);
   };
+
+  // Open chat automatically when user clicks notification toast
+  useEffect(() => {
+    const handleOpenFromEvent = (e: any) => {
+      const orderId = e.detail?.orderId;
+      if (!orderId) return;
+      const found = orders.find((o) => o.id === orderId);
+      if (found) {
+        setChatOrder(found);
+        setIsChatOpen(true);
+      }
+    };
+    window.addEventListener("open_customer_chat", handleOpenFromEvent);
+    return () => {
+      window.removeEventListener("open_customer_chat", handleOpenFromEvent);
+    };
+  }, [orders]);
 
   const handleSelectGuest = () => {
     setIsWelcomeOpen(false);

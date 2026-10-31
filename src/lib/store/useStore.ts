@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { Product, ProductInput, CartItem, Order, CustomerUser, OrderInput, ChatMessage, OrderChat, ChatSenderRole } from "@/types/store";
+import { broadcastCloudEvent, startCloudSyncListener, playNotificationSound } from "@/lib/sync/cloudSync";
 import {
   getStoredProducts,
   createProduct as createProductFn,
@@ -144,6 +146,87 @@ export function useStore() {
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     // ------------------------------------------------------------------
+    // Live multi-device cloud synchronization listener (SSE)
+    // ------------------------------------------------------------------
+    const stopCloudListener = startCloudSyncListener((cloudEvent) => {
+      if (!isMounted) return;
+
+      if (cloudEvent.type === "CHAT_MESSAGE") {
+        const { orderId, message, customerMeta } = cloudEvent;
+        const currentChats = getStoredChats();
+        let targetChat = currentChats[orderId];
+
+        if (!targetChat) {
+          targetChat = {
+            orderId,
+            customerName: customerMeta?.name || message.senderName || "Cliente",
+            customerEmail: customerMeta?.email,
+            customerPhone: customerMeta?.phone,
+            messages: [],
+          };
+          currentChats[orderId] = targetChat;
+        }
+
+        const msgExists = (targetChat.messages || []).some((m) => m.id === message.id);
+        if (!msgExists) {
+          targetChat.messages = [...(targetChat.messages || []), message];
+          targetChat.lastMessage = message.text;
+          targetChat.lastMessageAt = message.createdAt;
+
+          if (message.sender === "customer") {
+            targetChat.unreadForAdmin = (targetChat.unreadForAdmin || 0) + 1;
+            playNotificationSound();
+            toast.info(`💬 Mensaje de ${message.senderName}`, {
+              description: message.text,
+              duration: 8000,
+              action: {
+                label: "Abrir Chat",
+                onClick: () => {
+                  window.dispatchEvent(
+                    new CustomEvent("open_admin_chat", { detail: { orderId } })
+                  );
+                },
+              },
+            });
+          } else if (message.sender === "seller") {
+            targetChat.unreadForCustomer = (targetChat.unreadForCustomer || 0) + 1;
+            playNotificationSound();
+            toast.info(`💬 Soporte de la Tienda`, {
+              description: message.text,
+              duration: 8000,
+              action: {
+                label: "Ver Respuesta",
+                onClick: () => {
+                  window.dispatchEvent(
+                    new CustomEvent("open_customer_chat", { detail: { orderId } })
+                  );
+                },
+              },
+            });
+          }
+
+          saveStoredChats(currentChats);
+          setChats({ ...currentChats });
+        }
+      } else if (cloudEvent.type === "ORDER_CREATED") {
+        const { order } = cloudEvent;
+        const currentOrders = getStoredOrders();
+        const exists = currentOrders.some((o) => o.id === order.id);
+        if (!exists) {
+          const updated = [order, ...currentOrders];
+          saveOrders(updated);
+          setOrders(updated);
+          setMyPurchases(getMyPurchases());
+          playNotificationSound();
+          toast.success(`📦 Nuevo Pedido Recibido #${order.id}`, {
+            description: `${order.customerName} - Total: $${order.total.toFixed(2)}`,
+            duration: 8000,
+          });
+        }
+      }
+    });
+
+    // ------------------------------------------------------------------
     // Live multi-device synchronization loop
     // ------------------------------------------------------------------
     let isMounted = true;
@@ -186,6 +269,7 @@ export function useStore() {
     return () => {
       isMounted = false;
       clearInterval(interval);
+      stopCloudListener();
       window.removeEventListener("mini_store_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -275,6 +359,12 @@ export function useStore() {
     refreshState();
 
     if (res.success && res.order) {
+      // Direct Cloud Real-time broadcast for sub-second cross-device sync
+      broadcastCloudEvent({
+        type: "ORDER_CREATED",
+        order: res.order,
+      });
+
       // Sync to server so admin sees the order across devices
       fetch("/api/orders", {
         method: "POST",
@@ -310,6 +400,10 @@ export function useStore() {
   const createOrder = useCallback((input: OrderInput) => {
     const created = createAdminOrderFn(input);
     refreshState();
+    broadcastCloudEvent({
+      type: "ORDER_CREATED",
+      order: created,
+    });
     fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -359,7 +453,15 @@ export function useStore() {
     const msg = sendChatMessageFn(orderId, sender, senderName, text, customerMeta);
     refreshState();
 
-    // 2. Broadcast to server for multi-device delivery
+    // 2. Direct Cloud Real-time broadcast for sub-second cross-device sync
+    broadcastCloudEvent({
+      type: "CHAT_MESSAGE",
+      orderId,
+      message: msg,
+      customerMeta,
+    });
+
+    // 3. Broadcast to server for multi-device delivery
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

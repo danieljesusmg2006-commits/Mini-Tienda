@@ -2,7 +2,9 @@
 
 import { Order, CustomerUser } from "@/types/store";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useStore } from "@/lib/store/useStore";
 import {
   X,
   ShoppingBag,
@@ -17,6 +19,7 @@ import {
   ArrowRight,
   Sparkles,
   MessageSquare,
+  Search,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -38,9 +41,38 @@ export function CustomerOrdersModal({
   onOpenLogin,
   onOpenChat,
 }: CustomerOrdersModalProps) {
+  const { orders: allStoreOrders } = useStore();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [lookupId, setLookupId] = useState("");
+  const [lookupError, setLookupError] = useState("");
 
   if (!isOpen) return null;
+
+  const handleLookupOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = lookupId.trim().toUpperCase();
+    if (!query) return;
+
+    const found = allStoreOrders.find(
+      (o) =>
+        o.id.toUpperCase() === query ||
+        o.id.toUpperCase().replace("#", "") === query.replace("#", "") ||
+        (o.phone && o.phone.includes(query))
+    );
+
+    if (found) {
+      setLookupError("");
+      toast.success("Pedido localizado con éxito", {
+        description: `Orden #${found.id} - ${found.customerName}`,
+      });
+      if (onOpenChat) {
+        onOpenChat(found);
+      }
+      onClose();
+    } else {
+      setLookupError("No se encontró ningún pedido con ese ID o teléfono.");
+    }
+  };
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -114,7 +146,38 @@ export function CustomerOrdersModal({
         </div>
 
         {/* Persistence Notice Banner */}
-        <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
+          {/* Lookup Order from another device */}
+          <form
+            onSubmit={handleLookupOrder}
+            className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row items-center gap-2"
+          >
+            <div className="relative flex-1 w-full">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                type="text"
+                value={lookupId}
+                onChange={(e) => {
+                  setLookupId(e.target.value);
+                  if (lookupError) setLookupError("");
+                }}
+                placeholder="¿Compraste desde otro dispositivo? Ingresa tu ID de orden (ej: ORD-...)"
+                className="pl-8 text-xs h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+              />
+            </div>
+            <Button
+              type="submit"
+              size="sm"
+              className="w-full sm:w-auto h-9 text-xs bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 gap-1.5 font-medium"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Buscar y Chatear</span>
+            </Button>
+          </form>
+          {lookupError && (
+            <p className="text-[11px] text-rose-500 font-medium px-1">{lookupError}</p>
+          )}
+
           {isGuest ? (
             <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 text-xs">
               <div className="flex items-start gap-2 sm:gap-2.5">

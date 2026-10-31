@@ -68,6 +68,19 @@ export function SupportManager({
     });
   }, [orders, chats, getOrCreateChat]);
 
+  // Listen for open_admin_chat event from toast notifications
+  useEffect(() => {
+    const handleOpenAdminChat = (e: any) => {
+      if (e.detail?.orderId) {
+        setSelectedOrderId(e.detail.orderId);
+      }
+    };
+    window.addEventListener("open_admin_chat", handleOpenAdminChat);
+    return () => {
+      window.removeEventListener("open_admin_chat", handleOpenAdminChat);
+    };
+  }, []);
+
   // When selectedOrderId is active, mark chat as read by seller
   useEffect(() => {
     if (selectedOrderId) {
@@ -131,6 +144,12 @@ export function SupportManager({
   const activeOrder = selectedOrderId
     ? orders.find((o) => o.id === selectedOrderId)
     : null;
+
+  const unreadOtherChat = useMemo(() => {
+    return Object.values(chats).find(
+      (c) => c.orderId !== selectedOrderId && (c.unreadForAdmin || 0) > 0
+    );
+  }, [chats, selectedOrderId]);
 
   const handleSendReply = (customText?: string) => {
     const text = (customText || replyText).trim();
@@ -213,7 +232,11 @@ export function SupportManager({
         </div>
 
         {/* Status Count Pills */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-medium flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            En vivo
+          </span>
           <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-medium">
             Total Chats: <strong>{Object.keys(chats).length}</strong>
           </span>
@@ -398,10 +421,15 @@ export function SupportManager({
                   <button
                     type="button"
                     onClick={() => setSelectedOrderId(null)}
-                    className="md:hidden p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="relative md:hidden p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     aria-label="Volver a lista de chats"
                   >
                     <ArrowLeft className="w-4 h-4" />
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+                        {totalUnread}
+                      </span>
+                    )}
                   </button>
 
                   <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
@@ -448,6 +476,26 @@ export function SupportManager({
                   </Button>
                 )}
               </div>
+
+              {/* Unread Alert Banner for other orders */}
+              {unreadOtherChat && (
+                <div className="bg-rose-50 dark:bg-rose-950/70 border-b border-rose-200 dark:border-rose-900 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs text-rose-800 dark:text-rose-200 animate-in slide-in-from-top-1 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="truncate">
+                      <strong>{unreadOtherChat.customerName}:</strong> {unreadOtherChat.lastMessage || "Nuevo mensaje"} (#{unreadOtherChat.orderId})
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setSelectedOrderId(unreadOtherChat.orderId)}
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] h-7 px-3 shrink-0 font-medium"
+                  >
+                    Ver este chat
+                  </Button>
+                </div>
+              )}
 
               {/* Order Info Strip */}
               {activeOrder && (

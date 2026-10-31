@@ -133,8 +133,9 @@ export function OrderChatModal({
                 <h3 id="order-chat-title" className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                   Vendedor • Soporte Oficial
                 </h3>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-medium">
-                  En línea
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  En vivo
                 </Badge>
               </div>
 

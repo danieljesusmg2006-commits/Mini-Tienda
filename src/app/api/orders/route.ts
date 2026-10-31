@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/ordersServerStore";
 import { getOrCreateServerChat } from "@/lib/server/chatServerStore";
 import { syncOrderToSupabase } from "@/lib/server/supabaseSync";
+import { broadcastCloudEvent } from "@/lib/sync/cloudSync";
 import { Order } from "@/types/store";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,12 @@ export async function POST(request: NextRequest) {
 
     // Sync to Supabase in background if configured
     syncOrderToSupabase(saved).catch(() => {});
+
+    // Broadcast across all connected devices in real time
+    broadcastCloudEvent({
+      type: "ORDER_CREATED",
+      order: saved,
+    }).catch(() => {});
 
     // Auto-initialize chat for this order on the server
     try {
