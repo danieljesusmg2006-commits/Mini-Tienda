@@ -43,7 +43,7 @@ import {
   deleteOrderChat as deleteOrderChatFn,
 } from "./store";
 
-// Helper to merge local & server chats safely
+// Helper to merge local & server chats safely without duplicates
 function mergeChats(
   local: Record<string, OrderChat>,
   server: Record<string, OrderChat>
@@ -55,16 +55,29 @@ function mergeChats(
       merged[orderId] = localChat;
     } else {
       const serverChat = merged[orderId];
-      const messageMap = new Map<string, ChatMessage>();
-      (serverChat.messages || []).forEach((m) => messageMap.set(m.id, m));
+      const allMsgs: ChatMessage[] = [];
+
+      const isDuplicate = (list: ChatMessage[], item: ChatMessage) => {
+        return list.some(
+          (m) =>
+            m.id === item.id ||
+            (m.sender === item.sender &&
+              m.text.trim() === item.text.trim() &&
+              Math.abs(new Date(m.createdAt).getTime() - new Date(item.createdAt).getTime()) < 5000)
+        );
+      };
+
       (localChat.messages || []).forEach((m) => {
-        if (!messageMap.has(m.id)) {
-          messageMap.set(m.id, m);
-        }
+        if (!isDuplicate(allMsgs, m)) allMsgs.push(m);
       });
-      const allMessages = Array.from(messageMap.values()).sort(
+      (serverChat.messages || []).forEach((m) => {
+        if (!isDuplicate(allMsgs, m)) allMsgs.push(m);
+      });
+
+      const allMessages = allMsgs.sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
+
       merged[orderId] = {
         ...localChat,
         ...serverChat,
@@ -134,16 +147,8 @@ export function useStore() {
       refreshState();
     };
 
-    // When guest closes or leaves the page, clean temporary guest searches and orders
-    const handleBeforeUnload = () => {
-      if (!getStoredCustomer()) {
-        clearGuestSessionData();
-      }
-    };
-
     window.addEventListener("mini_store_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
-    window.addEventListener("beforeunload", handleBeforeUnload);
 
     // ------------------------------------------------------------------
     // Live multi-device cloud synchronization listener (SSE)
@@ -167,42 +172,59 @@ export function useStore() {
           currentChats[orderId] = targetChat;
         }
 
-        const msgExists = (targetChat.messages || []).some((m) => m.id === message.id);
+        // Robust deduplication: check matching ID or matching (sender, text, timestamp < 5s)
+        const msgExists = (targetChat.messages || []).some(
+          (m) =>
+            m.id === message.id ||
+            (m.sender === message.sender &&
+              m.text.trim() === message.text.trim() &&
+              Math.abs(new Date(m.createdAt).getTime() - new Date(message.createdAt).getTime()) < 5000)
+        );
+
         if (!msgExists) {
           targetChat.messages = [...(targetChat.messages || []), message];
           targetChat.lastMessage = message.text;
           targetChat.lastMessageAt = message.createdAt;
 
+          const isAdminPage =
+            typeof window !== "undefined" && window.location.pathname.startsWith("/admin");
+
           if (message.sender === "customer") {
             targetChat.unreadForAdmin = (targetChat.unreadForAdmin || 0) + 1;
-            playNotificationSound();
-            toast.info(`💬 Mensaje de ${message.senderName}`, {
-              description: message.text,
-              duration: 8000,
-              action: {
-                label: "Abrir Chat",
-                onClick: () => {
-                  window.dispatchEvent(
-                    new CustomEvent("open_admin_chat", { detail: { orderId } })
-                  );
+            // Only alert if we are in the admin dashboard (recipient)
+            if (isAdminPage) {
+              playNotificationSound();
+              toast.info(`💬 Mensaje de ${message.senderName}`, {
+                description: message.text,
+                duration: 6000,
+                action: {
+                  label: "Abrir Chat",
+                  onClick: () => {
+                    window.dispatchEvent(
+                      new CustomEvent("open_admin_chat", { detail: { orderId } })
+                    );
+                  },
                 },
-              },
-            });
+              });
+            }
           } else if (message.sender === "seller") {
             targetChat.unreadForCustomer = (targetChat.unreadForCustomer || 0) + 1;
-            playNotificationSound();
-            toast.info(`💬 Soporte de la Tienda`, {
-              description: message.text,
-              duration: 8000,
-              action: {
-                label: "Ver Respuesta",
-                onClick: () => {
-                  window.dispatchEvent(
-                    new CustomEvent("open_customer_chat", { detail: { orderId } })
-                  );
+            // Only alert if we are in the store view (recipient)
+            if (!isAdminPage) {
+              playNotificationSound();
+              toast.info(`💬 Soporte de la Tienda`, {
+                description: message.text,
+                duration: 6000,
+                action: {
+                  label: "Ver Respuesta",
+                  onClick: () => {
+                    window.dispatchEvent(
+                      new CustomEvent("open_customer_chat", { detail: { orderId } })
+                    );
+                  },
                 },
-              },
-            });
+              });
+            }
           }
 
           saveStoredChats(currentChats);
@@ -272,7 +294,6 @@ export function useStore() {
       stopCloudListener();
       window.removeEventListener("mini_store_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [refreshState]);
 
@@ -461,7 +482,7 @@ export function useStore() {
       customerMeta,
     });
 
-    // 3. Broadcast to server for multi-device delivery
+    // 3. Broadcast to server for multi-device delivery with the same exact message ID
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -471,13 +492,39 @@ export function useStore() {
         senderName,
         text,
         customerMeta,
+        messageId: msg.id,
+        createdAt: msg.createdAt,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.chat) {
           const localChats = getStoredChats();
-          localChats[orderId] = data.chat;
+          const existing = localChats[orderId];
+          if (!existing) {
+            localChats[orderId] = data.chat;
+          } else {
+            // Safely merge messages without deleting or duplicating
+            const allMsgs = [...(existing.messages || [])];
+            (data.chat.messages || []).forEach((m: ChatMessage) => {
+              const dup = allMsgs.some(
+                (x) =>
+                  x.id === m.id ||
+                  (x.sender === m.sender &&
+                    x.text.trim() === m.text.trim() &&
+                    Math.abs(new Date(x.createdAt).getTime() - new Date(m.createdAt).getTime()) < 5000)
+              );
+              if (!dup) allMsgs.push(m);
+            });
+            existing.messages = allMsgs.sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+            existing.lastMessage =
+              existing.messages[existing.messages.length - 1]?.text || existing.lastMessage;
+            existing.lastMessageAt =
+              existing.messages[existing.messages.length - 1]?.createdAt || existing.lastMessageAt;
+            localChats[orderId] = existing;
+          }
           saveStoredChats(localChats);
           setChats({ ...localChats });
         }

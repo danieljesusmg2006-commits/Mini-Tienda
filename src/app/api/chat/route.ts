@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderId, sender, senderName, text, customerMeta, action } = body;
+    const { orderId, sender, senderName, text, customerMeta, action, messageId, createdAt } = body;
 
-    console.log(`[API /api/chat POST] orderId: ${orderId}, sender: ${sender}, action: ${action}, text: "${text?.slice(0, 30)}"`);
+    console.log(`[API /api/chat POST] orderId: ${orderId}, sender: ${sender}, action: ${action}, id: ${messageId}, text: "${text?.slice(0, 30)}"`);
 
     if (!orderId) {
       return NextResponse.json(
@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
       sender as ChatSenderRole,
       senderName || (sender === "seller" ? "Soporte Mini Tienda" : "Cliente"),
       text,
-      customerMeta
+      customerMeta,
+      messageId,
+      createdAt
     );
 
     // Sync to Supabase in background if configured

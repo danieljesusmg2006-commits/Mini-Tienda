@@ -151,7 +151,9 @@ export function addServerChatMessage(
   sender: ChatSenderRole,
   senderName: string,
   text: string,
-  customerMeta?: { name?: string; email?: string; phone?: string }
+  customerMeta?: { name?: string; email?: string; phone?: string },
+  messageId?: string,
+  createdAt?: string
 ): { message: ChatMessage; chat: OrderChat } {
   const chats = getServerChats();
   let chat = chats[orderId];
@@ -165,13 +167,30 @@ export function addServerChatMessage(
     );
   }
 
+  const cleanText = text.trim();
+  const targetId = messageId || `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const targetCreated = createdAt || new Date().toISOString();
+
+  // Deduplication check: check if already present by ID or identical text/sender within 5 seconds
+  const existing = (chat.messages || []).find(
+    (m) =>
+      m.id === targetId ||
+      (m.sender === sender &&
+        m.text.trim() === cleanText &&
+        Math.abs(new Date(m.createdAt).getTime() - new Date(targetCreated).getTime()) < 5000)
+  );
+
+  if (existing) {
+    return { message: existing, chat };
+  }
+
   const newMessage: ChatMessage = {
-    id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    id: targetId,
     orderId,
     sender,
     senderName,
-    text: text.trim(),
-    createdAt: new Date().toISOString(),
+    text: cleanText,
+    createdAt: targetCreated,
     readByCustomer: sender === "customer",
     readBySeller: sender === "seller",
   };

@@ -964,12 +964,23 @@ export function sendChatMessage(
     );
   }
 
+  const cleanText = text.trim();
+  const existingDup = (chat.messages || []).find(
+    (m) =>
+      m.sender === sender &&
+      m.text.trim() === cleanText &&
+      Math.abs(Date.now() - new Date(m.createdAt).getTime()) < 3000
+  );
+  if (existingDup) {
+    return existingDup;
+  }
+
   const newMessage: ChatMessage = {
     id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     orderId,
     sender,
     senderName,
-    text: text.trim(),
+    text: cleanText,
     createdAt: new Date().toISOString(),
     readByCustomer: sender === "customer",
     readBySeller: sender === "seller",
