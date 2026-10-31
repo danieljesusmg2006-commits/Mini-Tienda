@@ -522,6 +522,11 @@ export default function AdminDashboardPage() {
                           <p className="font-bold text-slate-900 dark:text-white text-xs line-clamp-2 leading-snug">
                             {product.name}
                           </p>
+                          {product.description && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                              {product.description}
+                            </p>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] text-slate-400 font-mono">
                               ID: {product.id}
@@ -618,6 +623,11 @@ export default function AdminDashboardPage() {
                                 <p className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                   {product.name}
                                 </p>
+                                {product.description && (
+                                  <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 max-w-sm">
+                                    {product.description}
+                                  </p>
+                                )}
                                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
                                   ID: {product.id}
                                 </span>

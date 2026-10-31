@@ -2,7 +2,7 @@
 
 import { Product } from "@/types/store";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Check } from "lucide-react";
+import { ShoppingCart, Check, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -10,12 +10,14 @@ interface ProductCardProps {
   product: Product;
   quantityInCart: number;
   onAddToCart: (product: Product) => { success: boolean; message: string };
+  onSelectProduct?: (product: Product) => void;
 }
 
 export function ProductCard({
   product,
   quantityInCart,
   onAddToCart,
+  onSelectProduct,
 }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const isOutOfStock = product.stock <= 0;
@@ -39,8 +41,26 @@ export function ProductCard({
     setTimeout(() => setIsAdding(false), 300);
   };
 
+  const handleCardClick = () => {
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-lg dark:hover:shadow-slate-900/60 transition-all duration-300 flex flex-col group">
+    <div
+      onClick={handleCardClick}
+      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-lg dark:hover:shadow-slate-900/60 transition-all duration-300 flex flex-col group cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      aria-label={`Ver detalles de ${product.name}`}
+    >
       {/* Product Image */}
       <div className="aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden relative border-b border-slate-100 dark:border-slate-800 flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -54,14 +74,22 @@ export function ProductCard({
           }}
         />
 
+        {/* Hover view details badge */}
+        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <span className="px-3 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 text-slate-900 dark:text-white font-bold text-xs shadow-md flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+            <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>Ver detalles</span>
+          </span>
+        </div>
+
         {/* Category Pill */}
-        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200/60 dark:border-slate-700 max-w-[95px] sm:max-w-none truncate">
+        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-slate-200 shadow-xs border border-slate-200/60 dark:border-slate-700 max-w-[95px] sm:max-w-none truncate pointer-events-none">
           {product.category}
         </span>
 
         {/* In-cart indicator badge */}
         {quantityInCart > 0 && (
-          <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-xs flex items-center gap-1">
+          <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-600 text-white shadow-xs flex items-center gap-1 pointer-events-none">
             <Check className="w-3 h-3" />
             <span>{quantityInCart}</span>
             <span className="hidden sm:inline">en carrito</span>
@@ -75,6 +103,12 @@ export function ProductCard({
           <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug min-h-[2.2rem] sm:min-h-[2.5rem]">
             {product.name}
           </h3>
+
+          {product.description && (
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+              {product.description}
+            </p>
+          )}
 
           {/* Stock Badges */}
           <div>
@@ -108,7 +142,10 @@ export function ProductCard({
 
           <Button
             size="sm"
-            onClick={handleAdd}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAdd();
+            }}
             disabled={isOutOfStock || isMaxInCart || isAdding}
             className={`w-full min-[380px]:w-auto h-8 sm:h-9 text-[11px] sm:text-xs px-2.5 sm:px-3 gap-1.5 font-medium transition-all cursor-pointer ${
               isOutOfStock

@@ -10,7 +10,8 @@ import { CheckoutModal } from "@/components/store/CheckoutModal";
 import { WelcomeModal } from "@/components/store/WelcomeModal";
 import { CustomerOrdersModal } from "@/components/store/CustomerOrdersModal";
 import { OrderChatModal } from "@/components/store/OrderChatModal";
-import { Order } from "@/types/store";
+import { ProductDetailModal } from "@/components/store/ProductDetailModal";
+import { Order, Product } from "@/types/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -61,6 +62,7 @@ export default function PublicStorePage() {
   const [isPurchasesOpen, setIsPurchasesOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showGuestBanner, setShowGuestBanner] = useState(true);
 
   const handleOpenChat = (order: Order) => {
@@ -406,6 +408,7 @@ export default function PublicStorePage() {
                   product={product}
                   quantityInCart={quantityInCart}
                   onAddToCart={addItemToCart}
+                  onSelectProduct={(p) => setSelectedProduct(p)}
                 />
               );
             })}
@@ -490,6 +493,19 @@ export default function PublicStorePage() {
         onClose={() => setIsChatOpen(false)}
         order={chatOrder}
         customerUser={customerUser}
+      />
+
+      {/* Product Detail Modal with Full Description & Actions */}
+      <ProductDetailModal
+        isOpen={Boolean(selectedProduct)}
+        onClose={() => setSelectedProduct(null)}
+        product={selectedProduct}
+        quantityInCart={
+          selectedProduct
+            ? cart.find((item) => item.product.id === selectedProduct.id)?.quantity || 0
+            : 0
+        }
+        onAddToCart={addItemToCart}
       />
     </div>
   );

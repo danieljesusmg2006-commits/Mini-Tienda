@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   FileImage,
   RefreshCw,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -118,6 +119,7 @@ export function ProductModal({
   const [customCategory, setCustomCategory] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [stock, setStock] = useState("");
+  const [description, setDescription] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
@@ -140,6 +142,7 @@ export function ProductModal({
       }
       setImageUrl(initialProduct.imageUrl);
       setStock(String(initialProduct.stock));
+      setDescription(initialProduct.description || "");
       setImageError(false);
 
       if (initialProduct.imageUrl.startsWith("data:")) {
@@ -156,6 +159,7 @@ export function ProductModal({
       setCustomCategory("");
       setImageUrl(SAMPLE_IMAGES[0].url);
       setStock("10");
+      setDescription("");
       setImageError(false);
       setImageMode("upload");
       setUploadedFileName(null);
@@ -256,6 +260,7 @@ export function ProductModal({
       category: finalCategory,
       imageUrl: finalImageUrl,
       stock: numStock,
+      description: description.trim(),
     });
 
     onClose();
@@ -389,6 +394,24 @@ export function ProductModal({
                 />
               )}
             </div>
+          </div>
+
+          {/* Descripción del Producto */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-slate-400" />
+                Descripción del Producto
+              </label>
+              <span className="text-[10px] text-slate-400">Visible al cliente al hacer clic</span>
+            </div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe detalladamente las características, especificaciones y ventajas de este producto..."
+              rows={3}
+              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors resize-y min-h-[75px]"
+            />
           </div>
 
           {/* Imagen del Producto: Subir archivo o Ingresar URL */}
