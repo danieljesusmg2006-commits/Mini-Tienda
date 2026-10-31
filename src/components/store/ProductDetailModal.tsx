@@ -82,6 +82,7 @@ export function ProductDetailModal({
   };
 
   const handleContactSeller = () => {
+    onClose();
     if (!customerUser) {
       toast.error("Inicio de sesión requerido", {
         description: "Debes iniciar sesión para comunicarte con el vendedor.",

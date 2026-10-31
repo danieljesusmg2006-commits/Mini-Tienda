@@ -68,6 +68,7 @@ export default function PublicStorePage() {
   const [showGuestBanner, setShowGuestBanner] = useState(true);
 
   const handleOpenChat = (order: Order) => {
+    setSelectedProduct(null);
     if (!customerUser) {
       toast.error("Inicio de sesión requerido", {
         description: "Debes iniciar sesión para chatear con el vendedor sobre tu pedido.",
@@ -85,6 +86,7 @@ export default function PublicStorePage() {
   };
 
   const handleOpenProductInquiry = (product: Product) => {
+    setSelectedProduct(null);
     if (!customerUser) {
       toast.error("Inicio de sesión requerido", {
         description: "Debes iniciar sesión para comunicarte con el vendedor sobre este producto.",
